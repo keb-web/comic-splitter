@@ -18,6 +18,15 @@ class TestComicSplitter:
         panels = splitter.split_page(page_img)
         assert panels == []
 
+
+    def test_determine_box_bounds_with_one_existing_panel(self):
+        page_path = './tests/samples/test_page_one_panel.jpg'
+        left, top, right, bottom = 311, 342, 1889, 2705
+        page_img = cv2.imread(page_path)
+        splitter = ComicSplitter()
+        assert splitter.determine_panel_bounds(page_img) == [
+            left, top, right, bottom]
+
     @pytest.mark.skip(reason='need determine_box() func first')
     def test_split_page_with_basic_panel(self):
         page_path = './tests/samples/test_page_one_panel.jpg'
@@ -28,14 +37,6 @@ class TestComicSplitter:
         print()
         self.view_image(page_img)
         assert panels == [page_img]
-
-    def test_determine_box_bounds_with_existing_box(self):
-        page_path = './tests/samples/test_page_one_panel.jpg'
-        left, top, right, bottom = 311, 342, 1889, 2705
-        page_img = cv2.imread(page_path)
-        splitter = ComicSplitter()
-        assert splitter.determine_panel_bounds(page_img) == [
-            left, top, right, bottom]
 
     def view_image(self, img: np.ndarray):
         cv2.imshow('test_window', img)

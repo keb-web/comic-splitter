@@ -11,18 +11,8 @@ class ComicSplitter:
 
     def determine_panel_bounds(self, page: np.ndarray):
         height, width, channels = page.shape
-        min_x, min_y = width, height
-        max_x, max_y = 0, 0
-
-        for y in range(height):
-            for x in range(width):
-                if np.array_equal(page[y, x], [0, 0, 0]):
-                    min_x = min(min_x, x)
-                    min_y = min(min_y, y)
-                    max_x = max(max_x, x)
-                    max_y = max(max_y, y)
-
-        print(f"Top-left: ({min_x}, {min_y})")
-        print(f"Bottom-right: ({max_x}, {max_y})")
-
+        black_pixels = np.all(page == [0, 0, 0], axis=-1)
+        y_coords, x_coords = np.where(black_pixels)
+        min_x, max_x = np.min(x_coords), np.max(x_coords)
+        min_y, max_y = np.min(y_coords), np.max(y_coords)
         return [min_x, min_y, max_x, max_y]
