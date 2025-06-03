@@ -1,5 +1,4 @@
 from collections import defaultdict
-import os
 import numpy as np
 import cv2
 
@@ -12,29 +11,26 @@ class ComicSplitter:
     def split_page(self):
         return []
 
-    def preprocessing(self, page: np.ndarray) -> tuple:
-        blur_page = cv2.GaussianBlur(page, (5, 5), 0)
-        thresh_page = cv2.threshold(blur_page, 0, 255,
-                                    cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-        edge_page = cv2.Canny(thresh_page, 30, 200)
-
-        return blur_page, thresh_page, edge_page
-
-
     def get_panel_contours(self, page: np.ndarray) -> list: 
-        _, _, edge_page = self.preprocessing(page)
+        edge_page = self._preprocess_image(page)
 
         contours, _ = cv2.findContours(
             edge_page, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-
-        approx_contours = []
+        approximate_contours = []
         for contour in contours:
             epsilon = 0.02 * cv2.arcLength(contour, True)
             approx_poly = cv2.approxPolyDP(contour, epsilon, False)
-            approx_contours.append(approx_poly)
+            approximate_contours.append(approx_poly)
 
-        return approx_contours
+        return approximate_contours
+
+    def _preprocess_image(self, page: np.ndarray) -> np.ndarray:
+        blur_page = cv2.GaussianBlur(page, (5, 5), 0)
+        thresh_page = cv2.threshold(blur_page, 0, 255,
+                                    cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        edge_page = cv2.Canny(thresh_page, 30, 200)
+        return edge_page
 
     # TODO: Encapsulate drawing to it's own class
     def draw_contour(self, page: np.ndarray, contours: list, labels: bool):
