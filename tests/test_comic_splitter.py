@@ -13,16 +13,8 @@ class TestComicSplitter:
         splitter = ComicSplitter()
 
         contours = splitter.get_panel_contours(page_img) 
-        print(contours)
-
-        top_panel_vertices = contours[0].shape[0]
-        bottom_panel_vertices = contours[1].shape[0]
-
+        assert self.contour_is_rectangle(contours)
         assert len(contours) == 2
-        print(contours)
-        # assert contours.is_square()
-        assert top_panel_vertices == 4
-        assert bottom_panel_vertices == 4
 
     def test_labeling_two_stacked_panels(self):
         page_path = './tests/samples/test_page_stack_two_panel.jpg'
@@ -30,10 +22,10 @@ class TestComicSplitter:
 
         splitter = ComicSplitter()
         contours = splitter.get_panel_contours(page_img) 
+        assert self.contour_is_rectangle(contours)
         label_dict = splitter.label_contours(page_img, contours)
 
         # labeling panels from top to bottom
-        # TODO: CHECK each contour has 4 vertices
         assert label_dict == {2: contours[0], 1: contours[1]}
         assert len(contours) == 2
 
@@ -44,6 +36,7 @@ class TestComicSplitter:
 
         contours = splitter.get_panel_contours(page_img) 
         assert self.contour_is_rectangle(contours)
+
         # label_dict = splitter.label_contours(page_img, contours)
         # assert label_dict == {1: contours[0], 2: contours[1], 3: contours[2]}
         # assert len(contours) == 3 

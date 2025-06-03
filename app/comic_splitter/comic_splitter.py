@@ -14,12 +14,8 @@ class ComicSplitter:
 
     def preprocessing(self, page: np.ndarray) -> tuple:
         blur_page = cv2.GaussianBlur(page, (5, 5), 0)
-        # thresh_page = cv2.threshold(blur_page, 0, 255,
-        #                             cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-        thresh_page = cv2.adaptiveThreshold(blur_page, 255, 
-                                cv2.ADAPTIVE_THRESH_MEAN_C, 
-                                cv2.THRESH_BINARY, 
-                                blockSize=11, C=2)
+        thresh_page = cv2.threshold(blur_page, 0, 255,
+                                    cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
         edge_page = cv2.Canny(thresh_page, 30, 200)
 
         return blur_page, thresh_page, edge_page
