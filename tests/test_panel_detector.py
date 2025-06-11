@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-
 from app.comic_splitter.panel_detector import PanelDetector
 # TODO: rethink how to best interface with this class
 # add an integration test
