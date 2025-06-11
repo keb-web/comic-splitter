@@ -1,6 +1,7 @@
 import os
-import cv2
 import numpy as np
+import cv2
+
 
 # from app.comic_splitter.comic_splitter import ComicSplitter
 

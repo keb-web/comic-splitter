@@ -5,16 +5,28 @@ from cv2.typing import MatLike
 import numpy as np
 
 class PanelDetector:
+    def __init__(self, page: MatLike, margin: int = 0):
+        self.page = page
+        self.margin = margin
 
-    def get_panel_shapes(self,
-                         contours: list[np.ndarray]) -> list[tuple]:
+    def get_panel_shapes(self, contours: list[np.ndarray]) -> list[tuple]:
         rects = []
         for contour in contours:
-            rects.append(cv2.boundingRect(contour))
+            x, y, w, h = cv2.boundingRect(contour)
+            rects.append(self._apply_margins(x, y, w, h))
         return rects
 
-    def get_panel_contours(self, page: np.ndarray) -> list[np.ndarray]:
-        edge_page = self._preprocess_image(page)
+    def _apply_margins(self, x, y, width, height):
+        img_width, img_height = self.page.shape
+        if self.margin != 0:
+            x = max(x - self.margin, 0)
+            y = max(y - self.margin, 0)
+            width = min(width + self.margin * 2, img_width - x)
+            height = min(height + self.margin * 2, img_height - y)
+        return((x, y, width, height))
+
+    def get_panel_contours(self) -> list[np.ndarray]:
+        edge_page = self._preprocess_image(self.page)
         contours, _ = cv2.findContours(
             edge_page, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         return self._approximate_contours(contours)
@@ -39,6 +51,7 @@ class PanelDetector:
     def get_indexed_panels(self, panel_rects: list[tuple]) -> list[tuple]:
         # TODO: integrate variance handling
         # only works if panels are exactly lined up by y: make it at a range
+
         indexed_panels = []
         panels_by_y = defaultdict(list)
         for panel in panel_rects:
@@ -48,7 +61,6 @@ class PanelDetector:
             panels_by_x = sorted(panels, key= lambda x: x[0])
             for x_panel in panels_by_x:
                 indexed_panels.insert(0, x_panel)
-
         return indexed_panels
 
     # def get_panel_bounds(self, page: np.ndarray):
