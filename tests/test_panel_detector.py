@@ -3,10 +3,11 @@ import numpy as np
 from unittest import mock
 from app.comic_splitter.panel_detector import PanelDetector
 
-# TODO: rethink how to best interface with this class
-# add an integration test
-# feed a 
-# make PanelDetector use wrapper for cv2
+# TODO: 
+# - rethink how to best interface with this class
+# - add an integration test
+# - make PanelDetector use wrapper for cv2
+# - finish last test cases
 
 class TestPanelDetector():
 

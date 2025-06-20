@@ -1,11 +1,10 @@
 import numpy as np
-import pytest
 import io
 import zipfile
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, mock_open
 from app.comic_splitter.media_packager import MediaPackager
 
-# NOTE: parent of children that will contain differen types of media packagers
+# NOTE: parent of children that will contain different types of media packagers
 class TestMediaPackager:
 
     @patch('app.comic_splitter.media_packager.cv2.imwrite')
@@ -14,21 +13,15 @@ class TestMediaPackager:
         dummy_images = []
 
         packager = MediaPackager(dummy_images, dummy_path)
-        packager._zip()
+        packager._zip(None)
 
         mock_imwrite.assert_not_called()
-
-    #
-    # def test_packager_uses_default_path_with_bad_path_input(self):
-    #     dummy_path = './bad/path'
-    #     dummy_images = 
-    #
 
     def test_packager_converts_images_to_bytes(self):
         dummy_images = [np.ones((1, 1)), np.ones((1, 1))]
         packager = MediaPackager(dummy_images)
-        packager._convert_images_to_bytes()
-        for i, (filename, file_bytes) in enumerate(packager.images):
+        images_as_bytes = packager._convert_images_to_bytes()
+        for i, (filename, file_bytes) in enumerate(images_as_bytes):
             assert filename == f'{i}.jpg'
             assert isinstance(file_bytes, bytes)
 
@@ -36,9 +29,9 @@ class TestMediaPackager:
         dummy_image_bytes = [('1.jpg', b'fakebytes1'),
                              ('2.jpg', b'fakebytes2')]
         packager = MediaPackager(dummy_image_bytes)
-        zip_bytes = packager._zip()
-        assert zip_bytes is not None
-        zip_buffer = io.BytesIO(zip_bytes)
+        zip_buffer = packager._zip(dummy_image_bytes)
+        assert zip_buffer is not None
+        # zip_buffer = io.BytesIO(zip_buffer.getvalue())
         with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
             namelist = zip_file.namelist()
             print(namelist)
@@ -48,16 +41,11 @@ class TestMediaPackager:
             assert zip_file.read('2.jpg') == b'fakebytes2'
 
     def test_packager_downloads_zip_buffer(self):
-        pass
-
-    @pytest.mark.skip(reason='rearranging images to bytes')
-    @patch('app.comic_splitter.media_packager.cv2.imwrite')
-    def test_packager_zips_given_image_files_to_default_path(self,
-                                                             mock_imwrite):
-        dummy_images = MagicMock(spec=list)
-        packager = MediaPackager(dummy_images)
-        default_path = packager.download_path
-        packager._zip()
-
-        mock_imwrite.assert_called_with(default_path)
-
+        mock_bytes_io = MagicMock(spec=io.BytesIO)
+        packager = MediaPackager([])
+        with patch.object(packager, '_zip', return_value=mock_bytes_io), \
+            patch('builtins.open', mock_open()) as mock_file:
+            packager.download()
+            mock_file.assert_called_once_with(
+                f'{packager.download_path}', 'wb')
+            mock_file().write.assert_called_once_with(mock_bytes_io.getvalue())

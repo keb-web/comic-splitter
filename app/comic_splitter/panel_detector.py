@@ -63,10 +63,3 @@ class PanelDetector:
                 indexed_panels.insert(0, x_panel)
         return indexed_panels
 
-    # def get_panel_bounds(self, page: np.ndarray):
-    #     black_pixels = np.all(page == [0, 0, 0], axis=-1)
-    #     y_coords, x_coords = np.where(black_pixels)
-    #     min_x, max_x = np.min(x_coords), np.max(x_coords)
-    #     min_y, max_y = np.min(y_coords), np.max(y_coords)
-    #     return [min_x, min_y, max_x, max_y]
-
