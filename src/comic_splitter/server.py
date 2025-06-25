@@ -33,7 +33,7 @@ def split(files: List[UploadFile] = File(...)):
 def _check_valid_file_extension(files: List[UploadFile]):
     for file in files:
         name = file.filename
-        if name and name.rsplit('.', -1)[-1] not in VALID_FILE_TYPES:
+        if name and name.rsplit('.', -1)[-1].lower() not in VALID_FILE_TYPES:
             raise HTTPException(status_code=400, detail='invalid filetype')
 
 
