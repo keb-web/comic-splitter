@@ -1,5 +1,5 @@
 import numpy as np
-from app.comic_splitter.cropper import ImageCropper
+from comic_splitter.cropper import ImageCropper
 from tests.page_utils import PageUtils
 
 

@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from unittest import mock
-from app.comic_splitter.panel_detector import PanelDetector
+from comic_splitter.panel_detector import PanelDetector
 
 # TODO: 
 # - rethink how to best interface with this class
@@ -10,6 +10,22 @@ from app.comic_splitter.panel_detector import PanelDetector
 # - finish last test cases
 
 class TestPanelDetector():
+
+    def generate_page(self, rectangle_coords: list[tuple[tuple, tuple]],
+                      page_height: int = 3035, page_width: int = 2150,
+                      color: tuple = (0, 0, 0), thickness: int = 5):
+        page = np.ones((page_height, page_width), dtype=np.uint8) * 255
+        for coord in rectangle_coords:
+            start_xy, end_xy = coord[0], coord[1]
+            cv2.rectangle(page, start_xy, end_xy,
+                          color=color, thickness=thickness)
+        return page
+
+    def contour_is_rectangle(self, contours) -> bool:
+        for contour in contours:
+            if contour.shape[0] != 4:
+                return False
+        return True
 
     def test_get_stacked_panel_contours(self):
         page_path = './tests/samples/test_page_stack_two_panel.jpg'
@@ -146,20 +162,4 @@ class TestPanelDetector():
     #     pass
     # def test_labeling_inverted_panels():
     #     pass
-
-    def generate_page(self, rectangle_coords: list[tuple[tuple, tuple]],
-                      page_height: int = 3035, page_width: int = 2150,
-                      color: tuple = (0, 0, 0), thickness: int = 5):
-        page = np.ones((page_height, page_width), dtype=np.uint8) * 255
-        for coord in rectangle_coords:
-            start_xy, end_xy = coord[0], coord[1]
-            cv2.rectangle(page, start_xy, end_xy,
-                          color=color, thickness=thickness)
-        return page
-
-    def contour_is_rectangle(self, contours) -> bool:
-        for contour in contours:
-            if contour.shape[0] != 4:
-                return False
-        return True
 

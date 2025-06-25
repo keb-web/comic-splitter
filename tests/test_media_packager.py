@@ -2,12 +2,12 @@ import numpy as np
 import io
 import zipfile
 from unittest.mock import MagicMock, patch, mock_open
-from app.comic_splitter.media_packager import MediaPackager
+from comic_splitter.media_packager import MediaPackager
 
 # NOTE: parent of children that will contain different types of media packagers
 class TestMediaPackager:
 
-    @patch('app.comic_splitter.media_packager.cv2.imwrite')
+    @patch('comic_splitter.media_packager.cv2.imwrite')
     def test_packager_returns_nothing_with_no_media_input(self, mock_imwrite):
         dummy_path = './dummy/path'
         dummy_images = []
