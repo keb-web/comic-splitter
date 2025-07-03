@@ -18,9 +18,12 @@ app.add_middleware(
 
 VALID_FILE_TYPES = ['jpg', 'png']
 
+
 @app.post("/split")
 def split(files: List[UploadFile] = File(...)):
+    return {'message': 'this is the good path'}
     _check_valid_file_extension(files)
+    print('here')
 
     # for file in files:
     #     try:
@@ -43,5 +46,6 @@ def _check_valid_file_extension(files: List[UploadFile]):
         name = file.filename
         if name and name.rsplit('.', -1)[-1].lower() not in VALID_FILE_TYPES:
             raise HTTPException(status_code=400, detail='invalid filetype')
+
 
 
