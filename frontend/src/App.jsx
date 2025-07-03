@@ -2,9 +2,11 @@ import { useState } from 'react'
 import './App.css'
 // TODO: remove import
 import testImage from './assets/lantern.JPEG';
+// TODO:
+// when 'reset pressed' remove
 
 
-function SubmitImage({setSplitImages}) {
+function SubmitImage({ setSplitImages }) {
 	const valid_filetypes = ['image/jpeg', 'image/png', 'image/jpg']
 
 	function handleSubmit(e) {
@@ -37,7 +39,7 @@ function SubmitImage({setSplitImages}) {
 			if (!response.ok) {
 				throw new Error('Response status: ${response.status}');
 			}
-			const imageData = response.json()
+			const imageData = await response.json()
 			setSplitImages(imageData)
 		} catch (error) {
 			console.error(error)
@@ -47,24 +49,56 @@ function SubmitImage({setSplitImages}) {
 	return (
 		<form method='post' onSubmit={handleSubmit}>
 			<input name='files' type='file' accept='image/png, image/jpeg, image/jpg' multiple />
-			<button type="reset">Reset form</button>
+			<button type="reset" onClick={() => { setSplitImages([]) }}>Reset form</button>
 			<button type="submit">Submit form</button>
 			<hr />
 		</form>
 	);
 }
+// TODO: understand difference
 
-function ImagePreview({splitImages}) {
-	if (splitImages.length == 0){
-		return <p> upload comic file to preview pages</p>
-	}
-	return (
-		<>
-			<div><img src={testImage} alt='test image' ></img></div>
-			<div><img src={splitImages} alt='api image' ></img></div>
-		</>
-	)
+//
+// function ImagePreview({ splitImages }) {
+// 	if (splitImages.length == 0) {
+// 		return <p> upload comic file to preview pages</p>
+// 	}
+//
+// 	console.log('s', splitImages)
+// 	function formatImgSrc(image) {
+// 		return `data:image/${splitImages.image_type};base64,${image.images}`;
+// 	}
+// 	const imageType = splitImages.image_type.split('/')[1];
+//   	const previewImages = splitImages.images.map(formatImgSrc);
+// 	console.log(previewImages)
+//
+// 	return (
+// 		<div>
+// 			{previewImages.map((image, index) => (
+// 				<img key={index} src={image} alt={`img-${index}`} />
+// 			))}
+// 		</div>
+// 	);
+// }
+function ImagePreview({ splitImages }) {
+  if (!splitImages || !splitImages.images) {
+    return <div>No images to preview</div>;
+  }
+
+  const imageType = splitImages.image_type.split('/')[1]; // e.g. "png"
+
+  const previewImages = splitImages.images.map((base64) =>
+    `data:image/${imageType};base64,${base64}`
+  );
+
+  return (
+    <div>
+      {previewImages.map((src, index) => (
+        <img key={index} src={src} alt={`img-${index}`} />
+      ))}
+    </div>
+  );
 }
+
 
 function App() {
 	const [splitImages, setSplitImages] = useState([])
@@ -73,8 +107,9 @@ function App() {
 		<>
 			<h1>comic splitter</h1>
 			<p>only png and jpeg supported currently</p>
-			<SubmitImage  setSplitImages={setSplitImages}/>
-			<ImagePreview splitImages={splitImages}/>
+			<SubmitImage setSplitImages={setSplitImages} />
+			<button>download as .zip</button>
+			<ImagePreview splitImages={splitImages} />
 		</>
 	)
 }
