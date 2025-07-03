@@ -1,18 +1,27 @@
 from fastapi import File, UploadFile, HTTPException, FastAPI
 from typing import List
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# Method        `POST`                                  
-# Endpoint      `/upload-image`                          
-# Request Body  `multipart/form-data` with 1 image file 
-# Response      `application/zip` file                  
+allowed_origins = [
+    "http://localhost:5173"
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
+    allow_headers=["X-Requested-With", "Content-Type"],
+)
 
 VALID_FILE_TYPES = ['jpg', 'png']
 
 @app.post("/split")
 def split(files: List[UploadFile] = File(...)):
+    _check_valid_file_extension(files)
+
     # for file in files:
     #     try:
     #         contents = file.file.read()
@@ -22,10 +31,9 @@ def split(files: List[UploadFile] = File(...)):
     #         raise HTTPException(status_code=500, detail='Something wrong')
     #     finally:
     #         file.file.close()
-    #
+
     # return {"message": f"Successfuly uploaded {[]}"}    
 
-    _check_valid_file_extension(files)
     # TODO: add comic splitt functionality, need to build splitting logic first
 
     return {'message': 'this is the good path'}
