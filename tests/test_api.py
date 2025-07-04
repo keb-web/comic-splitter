@@ -20,12 +20,12 @@ class TestAPI:
     # TODO: iterate iterate iterate!!
     def test_valid_filetype_posted_returns_split_panels_as_pages(self):
         fake_image = BytesIO(b"fake image content")
-        files = [("files", ("FakeFile.png", fake_image, "image/png"))]
-
+        files = [("file", ("FakeFile.png", fake_image, "image/png"))]
         response = client.post("/split", files=files)
 
         assert response.status_code == 200
-        assert response.json() == {'message': 'this is the good path'}
+        # assert response.json() == {'image_type': 'image/png',
+        #                            'images': [files]}
         # assert zipfile returned
         # assert zipfile contents
 

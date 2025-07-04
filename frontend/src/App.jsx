@@ -2,8 +2,6 @@ import { useState } from 'react'
 import './App.css'
 // TODO: remove import
 import testImage from './assets/lantern.JPEG';
-// TODO:
-// when 'reset pressed' remove
 
 
 function SubmitImage({ setSplitImages }) {

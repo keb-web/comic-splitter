@@ -1,33 +1,33 @@
-import numpy as np
-import cv2
+from fastapi import File, UploadFile
 
+from comic_splitter.cropper import ImageCropper
+from comic_splitter.etcher import Etcher
+from comic_splitter.media_packager import MediaPackager
+from comic_splitter.panel_detector import PanelDetector
 
 class ComicSplitter:
-    def __init__(self):
-        pass
+    def __init__(self, files: list[UploadFile]):
+        self.files = files
+        self.cropper = ImageCropper()
+        self.etcher = Etcher()
 
+    # returns list[File]
+    async def split(self) -> list:
+        # basic implementation
+        # read in File (bytes) (asyunc task)
+        return [await self.files[0].read()]
+
+        # make this cpu-bound blocking
+        # run each file byte through panel detection
+
+        # create new files with etcher or crop
+
+        # package zip
+
+        # return list of new files (bytes) and cache zip (optional)
+
+        # zip should be exposed to a get request for later retrieval
+        return []
+ 
     def split_page(self):
         return []
-
-
-class Etcher:
-        def draw_contour(self, page: np.ndarray, contours: list, labels: bool):
-            height, width = page.shape
-            blank_image = np.ones((height, width, 3), np.uint8)
-            cv2.drawContours(blank_image, contours, -1, (0, 255, 0), 3)
-            if labels:
-                self.draw_label_contours(blank_image, contours)
-            return blank_image
-
-        def draw_label_contours(self, page, contours: list):
-            panel_number = len(contours)
-            for contour in contours:
-                x, y, w, h = cv2.boundingRect(contour)
-                center_x = x + w // 2
-                center_y = y + h // 2
-
-                cv2.putText(
-                    page, str(panel_number),
-                    (center_x, center_y),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    1, (0,0,255), 2)
