@@ -25,32 +25,29 @@ app.add_middleware(
 VALID_FILE_TYPES = ['jpg', 'png', 'jpeg']
 
 # @app.post("/split")
-# def split(files: List[UploadFile] = File(...)):
+# async def split(files: List[UploadFile] = File(...)):
 #     _check_valid_file_extension(files)
+#     file_type = files[0].content_type
+#     # # TODO: add comic splitt functionality, need to build splitting logic 
+#     #
+#     # splitter = ComicSplitter(files)
+#     # panels = splitter.split()
+#     #
+#     # # FIX: blocking implementation might need to be async
+#     # encoded_files = [await b64encode(p.file.read()).decode('utf-8') for p in panels]
+#     encoded_files = [b64encode(f.file.read()).decode('utf-8') for f in files]
 #
-#     # for file in files:
-#     #     try:
-#     #         contents = file.file.read()
-#     #         with open(file.filename, 'wb') as f:
-#     #             f.write(contents)
-#     #     except Exception:
-#     #         raise HTTPException(status_code=500, detail='Something wrong')
-#     #     finally:
-#     #         file.file.close()
-#
-#     # return {"message": f"Successfuly uploaded {[]}"}    
+#     return {'image_type': file_type, 'images': encoded_files}
 
 @app.post("/split")
 async def split(files: List[UploadFile] = File(...)):
     _check_valid_file_extension(files)
     file_type = files[0].content_type
-    # TODO: add comic splitt functionality, need to build splitting logic 
 
     splitter = ComicSplitter(files)
-    panels = splitter.split()
-
-    # FIX: blocking implementation might need to be async
-    encoded_files = [await b64encode(p.file.read()).decode('utf-8') for p in panels]
+    panels = await splitter.split()
+    # encoded_files = [b64encode(p.file.read()).decode('utf-8') for p in panels]
+    encoded_files = [b64encode(p).decode('utf-8') for p in panels]
 
     return {'image_type': file_type, 'images': encoded_files}
 

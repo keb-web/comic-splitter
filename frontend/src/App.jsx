@@ -1,7 +1,5 @@
 import { useState } from 'react'
 import './App.css'
-// TODO: remove import
-import testImage from './assets/lantern.JPEG';
 
 
 function SubmitImage({ setSplitImages }) {
@@ -53,8 +51,9 @@ function SubmitImage({ setSplitImages }) {
 		</form>
 	);
 }
-// TODO: understand difference
 
+//  TODO: understand difference
+//
 //
 // function ImagePreview({ splitImages }) {
 // 	if (splitImages.length == 0) {
@@ -77,13 +76,13 @@ function SubmitImage({ setSplitImages }) {
 // 		</div>
 // 	);
 // }
+
 function ImagePreview({ splitImages }) {
   if (!splitImages || !splitImages.images) {
     return <div>No images to preview</div>;
   }
 
-  const imageType = splitImages.image_type.split('/')[1]; // e.g. "png"
-
+  const imageType = splitImages.image_type.split('/')[1];
   const previewImages = splitImages.images.map((base64) =>
     `data:image/${imageType};base64,${base64}`
   );

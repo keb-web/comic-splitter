@@ -2,7 +2,6 @@
 import numpy as np
 
 class ImageCropper:
-
     def crop(self, image: np.ndarray,
              crop_queue: list[tuple]) -> list:
         cropped_images = []
