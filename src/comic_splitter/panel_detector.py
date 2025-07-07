@@ -5,28 +5,17 @@ from cv2.typing import MatLike
 import numpy as np
 
 class PanelDetector:
-    def __init__(self, page: MatLike, margin: int = 0):
-        self.page = page
+    def __init__(self, margin: int = 0):
         self.margin = margin
 
-    def get_panel_shapes(self, contours: list[np.ndarray]) -> list[tuple]:
-        rects = []
-        for contour in contours:
-            x, y, w, h = cv2.boundingRect(contour)
-            rects.append(self._apply_margins(x, y, w, h))
-        return rects
+    def detect_panels(self, page: MatLike):
+        contours = self.get_panel_contours(page)
+        rects = self.get_panel_shapes(contours, page)
+        panels = self.get_indexed_panels(rects)
+        return panels
 
-    def _apply_margins(self, x, y, width, height):
-        img_width, img_height = self.page.shape
-        if self.margin != 0:
-            x = max(x - self.margin, 0)
-            y = max(y - self.margin, 0)
-            width = min(width + self.margin * 2, img_width - x)
-            height = min(height + self.margin * 2, img_height - y)
-        return((x, y, width, height))
-
-    def get_panel_contours(self) -> list[np.ndarray]:
-        edge_page = self._preprocess_image(self.page)
+    def get_panel_contours(self, page: MatLike) -> list[np.ndarray]:
+        edge_page = self._preprocess_image(page)
         contours, _ = cv2.findContours(
             edge_page, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         return self._approximate_contours(contours)
@@ -47,6 +36,24 @@ class PanelDetector:
             points = approx_poly.reshape(-1, 2)
             approximate_contours.append(points)
         return approximate_contours
+
+    def get_panel_shapes(self, contours: list[np.ndarray],
+                         page: MatLike) -> list[tuple]:
+        rects = []
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+            rects.append(self._apply_margins(x, y, w, h, page))
+        return rects
+
+    def _apply_margins(self, x: int, y: int, width: int, height: int,
+                       page: MatLike):
+        img_width, img_height = page.shape
+        if self.margin != 0:
+            x = max(x - self.margin, 0)
+            y = max(y - self.margin, 0)
+            width = min(width + self.margin * 2, img_width - x)
+            height = min(height + self.margin * 2, img_height - y)
+        return((x, y, width, height))
 
     def get_indexed_panels(self, panel_rects: list[tuple]) -> list[tuple]:
         # TODO: integrate variance handling

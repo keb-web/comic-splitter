@@ -1,4 +1,5 @@
 import cv2
+from cv2.gapi import mul
 import numpy as np
 from unittest import mock
 from comic_splitter.panel_detector import PanelDetector
@@ -30,8 +31,8 @@ class TestPanelDetector():
     def test_get_stacked_panel_contours(self):
         page_path = './tests/samples/test_page_stack_two_panel.jpg'
         page_img = cv2.imread(page_path, cv2.IMREAD_GRAYSCALE)
-        detector = PanelDetector(page_img)
-        contours = detector.get_panel_contours() 
+        detector = PanelDetector()
+        contours = detector.get_panel_contours(page_img) 
 
         assert self.contour_is_rectangle(contours)
         assert len(contours) == 2
@@ -44,8 +45,8 @@ class TestPanelDetector():
         contours = [dummy_contour_1, dummy_contour_2]
         dummy_page = mock.Mock()
         dummy_page.shape = (1, 1)
-        detector = PanelDetector(dummy_page)
-        rects = detector.get_panel_shapes(contours)
+        detector = PanelDetector()
+        rects = detector.get_panel_shapes(contours, dummy_page)
         assert len(rects) == 2
         assert rects[0] == (10, 10, 11, 11)  # x, y, width, height
         assert rects[1] == (30, 30, 11, 11)
@@ -58,11 +59,12 @@ class TestPanelDetector():
                 top_panel, bottom_panel
             ]
         )
-        detector = PanelDetector(two_stacked_panels_page)
-        contours = detector.get_panel_contours() 
+        detector = PanelDetector()
+        contours = detector.get_panel_contours(two_stacked_panels_page) 
         assert self.contour_is_rectangle(contours)
 
-        label_rects = detector.get_panel_shapes(contours)
+        label_rects = detector.get_panel_shapes(contours,
+                                                two_stacked_panels_page)
         assert len(label_rects) == 2
         top_shape = label_rects[1]
         bottom_shape = label_rects[0]
@@ -81,11 +83,13 @@ class TestPanelDetector():
                 left_panel, middle_panel, right_panel
             ]
         )
-        detector = PanelDetector(multiple_side_by_side_panels_page)
-        contours = detector.get_panel_contours()
+        detector = PanelDetector()
+        contours = detector.get_panel_contours(
+            multiple_side_by_side_panels_page)
         assert self.contour_is_rectangle(contours)
 
-        label_rects = detector.get_panel_shapes(contours)
+        label_rects = detector.get_panel_shapes(
+            contours, multiple_side_by_side_panels_page)
         assert len(label_rects) == 3
         left_shape, middle_shape, right_shape = (label_rects[2],
                                                  label_rects[1],
@@ -107,11 +111,12 @@ class TestPanelDetector():
             ]
         )
 
-        detector = PanelDetector(multiple_mixed_panels_page)
-        contours = detector.get_panel_contours()
+        detector = PanelDetector()
+        contours = detector.get_panel_contours(multiple_mixed_panels_page)
         assert self.contour_is_rectangle(contours)
 
-        label_rects = detector.get_panel_shapes(contours)
+        label_rects = detector.get_panel_shapes(contours,
+                                                multiple_mixed_panels_page)
         assert len(label_rects) == 6
 
         # labeling points from right-to-left & top-to-bottom
@@ -133,10 +138,10 @@ class TestPanelDetector():
                 inner_panel
             ]
         )
-        detector = PanelDetector(nested_panel_page)
-        contours = detector.get_panel_contours()
+        detector = PanelDetector()
+        contours = detector.get_panel_contours(nested_panel_page)
         assert self.contour_is_rectangle(contours)
-        label_rects = detector.get_panel_shapes(contours)
+        label_rects = detector.get_panel_shapes(contours, nested_panel_page)
         assert len(label_rects) == 1
         label_dict = detector.get_indexed_panels(label_rects)
         assert label_dict == [(99, 96, 1905, 2808)]
@@ -146,9 +151,9 @@ class TestPanelDetector():
             rectangle_coords=[((50, 50), (200, 200))],
             page_height = 400, page_width = 400
         )
-        detector = PanelDetector(page=test_page, margin=25)
-        contours = detector.get_panel_contours()
-        shapes = detector.get_panel_shapes(contours)
+        detector = PanelDetector(margin=25)
+        contours = detector.get_panel_contours(page=test_page)
+        shapes = detector.get_panel_shapes(contours, test_page)
         panel = detector.get_indexed_panels(shapes)
         assert panel  == [(24, 21, 205, 208)]
 

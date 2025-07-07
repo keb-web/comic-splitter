@@ -47,6 +47,5 @@ class TestAPI:
         response = client.post("/split", files=files)
 
         data = response.json()
-
         assert response.status_code == 200
         assert len(data['images']) == 2

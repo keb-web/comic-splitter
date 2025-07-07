@@ -1,6 +1,9 @@
+from typing import Literal
 import cv2
+from cv2.typing import MatLike
 from fastapi import UploadFile
 import numpy as np
+from numpy.typing import NDArray
 
 from comic_splitter.cropper import ImageCropper
 from comic_splitter.etcher import Etcher
@@ -8,57 +11,56 @@ from comic_splitter.media_packager import MediaPackager
 from comic_splitter.panel_detector import PanelDetector
 
 class ComicSplitter:
-    def __init__(self, files: list[UploadFile]):
+    def __init__(self,files: list[UploadFile]):
         self.files = files
         self.cropper = ImageCropper()
         self.etcher = Etcher()
+        self.detector = PanelDetector()
 
-    # returns list[File]
-    async def split(self) -> list:
-        # basic implementation
-        # read in File (bytes) (asyunc task)
-        # make file into matlike matrix for processing
+    async def split(self, mode: Literal['crop', 'etch'] = 'crop') -> list:
+        comic_pages, page_panels = await self._extract_images_and_panels()
+        panel_imgs = self.generate_panel_images(mode, comic_pages, page_panels)
+        return self.encode_panels_to_bytes(panel_imgs)
+        # package zip (optional)
+        # return list of new files (bytes) and cache zip?? (optional)
+        # zip should be exposed to a get request for later retrieval
+        
+    async def _extract_images_and_panels(self) -> tuple:
+        comic_pages, page_panels = [], []
+        for file in self.files:
+            file_content = await self._decode_bytes_to_matlike_image(file)
+            panels = self.detector.detect_panels(file_content)
+            comic_pages.append(file_content)
+            page_panels.append(panels)
+        return (comic_pages, page_panels)
 
-        page_panels = []
-        pages = []
-        for page in self.files:
-            page_contents_bytes = await page.read()
-            page_content_arr = np.frombuffer(page_contents_bytes,
-                                             dtype=np.uint8)
-            page_content_matlike = cv2.imdecode(
-                page_content_arr, cv2.IMREAD_GRAYSCALE)
-            if page_content_matlike is None:
-                raise ValueError('u fucked up!')
-            else:
-                pages.append(page_content_matlike)
-
-            detector = PanelDetector(page_content_matlike)
-            contours = detector.get_panel_contours()
-            rects = detector.get_panel_shapes(contours)
-            indexed_panels = detector.get_indexed_panels(rects)
-            page_panels.append(indexed_panels)
-
-        # create new files with etcher or crop
-        # crop
+    async def _decode_bytes_to_matlike_image(self, page) -> MatLike:
+        page_contents_bytes = await page.read()
+        page_content_arr = np.frombuffer(page_contents_bytes,
+                                         dtype=np.uint8)
+        page_content_matlike = cv2.imdecode(
+            page_content_arr, cv2.IMREAD_GRAYSCALE)
+        return page_content_matlike
+    
+    def generate_panel_images(self, mode, pages: list[NDArray], panels: list):
         panel_imgs = []
-        for i in range(len(self.files)):
-            page = pages[i]
-            crop_queue = page_panels[i]
-            panel_imgs.extend(self.cropper.crop(page, crop_queue))
-        # etcher
-        # todo:
-        # implement etcher
+        if mode == 'crop':
+            for i in range(len(self.files)):
+                panel_imgs.extend(self.cropper.crop(
+                    pages[i], panels[i]))
+        elif mode == 'etch':
+            for i in range(len(self.files)):
+                panel_imgs.append(self.etcher.etch(
+                    pages[i], panels[i]))
+        return panel_imgs
 
-        # convert nd-array back into bytes
+    def encode_panels_to_bytes(self, panel_imgs, format: str = '.jpg'):
         panel_imgs_as_bytes = []
-        print(len(panel_imgs_as_bytes))
         for img_arr in panel_imgs:
-            _, buf = cv2.imencode('.jpg', img_arr)
+            success, buf = cv2.imencode(format, img_arr)
+            if not success:
+                raise ValueError("Failed to encode panel image")
             img_bytes = buf.tobytes()
             panel_imgs_as_bytes.append(img_bytes)
 
         return panel_imgs_as_bytes
-
-        # package zip (optional)
-        # return list of new files (bytes) and cache zip?? (optional)
-        # zip should be exposed to a get request for later retrieval

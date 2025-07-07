@@ -24,21 +24,6 @@ app.add_middleware(
 
 VALID_FILE_TYPES = ['jpg', 'png', 'jpeg']
 
-# @app.post("/split")
-# async def split(files: List[UploadFile] = File(...)):
-#     _check_valid_file_extension(files)
-#     file_type = files[0].content_type
-#     # # TODO: add comic splitt functionality, need to build splitting logic 
-#     #
-#     # splitter = ComicSplitter(files)
-#     # panels = splitter.split()
-#     #
-#     # # FIX: blocking implementation might need to be async
-#     # encoded_files = [await b64encode(p.file.read()).decode('utf-8') for p in panels]
-#     encoded_files = [b64encode(f.file.read()).decode('utf-8') for f in files]
-#
-#     return {'image_type': file_type, 'images': encoded_files}
-
 @app.post("/split")
 async def split(files: List[UploadFile] = File(...)):
     _check_valid_file_extension(files)
@@ -46,7 +31,6 @@ async def split(files: List[UploadFile] = File(...)):
 
     splitter = ComicSplitter(files)
     panels = await splitter.split()
-    # encoded_files = [b64encode(p.file.read()).decode('utf-8') for p in panels]
     encoded_files = [b64encode(p).decode('utf-8') for p in panels]
 
     return {'image_type': file_type, 'images': encoded_files}
