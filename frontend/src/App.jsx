@@ -50,16 +50,18 @@ function SubmitImage({ setSplitImages }) {
 	return (
 		<form method='post' onSubmit={handleSubmit}>
 			<input name='files' type='file' accept='image/png, image/jpeg, image/jpg' multiple />
-			<label>
-				<input type="radio" name="mode" value="crop" defaultChecked />
-				Crop
-			</label>
-			<label>
-				<input type="radio" name="mode" value="etch" />
-				Etch
-			</label>
 			<button type="reset" onClick={() => { setSplitImages([]) }}>Reset form</button>
 			<button type="submit">Submit form</button>
+			<div class='formSettings'>
+				<label>
+					<input type="radio" name="mode" value="crop" defaultChecked />
+					Crop
+				</label>
+				<label>
+					<input type="radio" name="mode" value="etch" />
+					Etch
+				</label>
+			</div>
 			<hr />
 		</form>
 	);
@@ -91,9 +93,9 @@ function App() {
 	return (
 		<>
 			<h1>comic splitter</h1>
-			<p>only png and jpeg supported currently</p>
+			<p>only png and jpeg supported currently...</p>
 			<SubmitImage setSplitImages={setSplitImages} />
-			<button>download as .zip</button>
+			<button class='zip'>download as .zip</button>
 			<ImagePreview splitImages={splitImages} />
 		</>
 	)
