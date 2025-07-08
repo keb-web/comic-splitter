@@ -50,11 +50,14 @@ class ComicSplitter:
                     pages[i], panels[i]))
         elif mode == 'etch':
             for i in range(len(self.files)):
-                panel_imgs.append(self.etcher.etch(
-                    pages[i], panels[i]))
+                # panel_imgs.append(self.etcher.etch(
+                #     pages[i], panels[i]))
                 # TODO: someway to use options to toggle this
                 # panel_imgs.append(self.etcher.etch(
                 #     pages[i], panels[i], blank=True))
+                # BUG: labeling got broken
+                panel_imgs.append(self.etcher.etch(
+                    pages[i], panels[i], labels=True))
 
         return panel_imgs
 

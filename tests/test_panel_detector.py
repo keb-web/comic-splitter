@@ -1,5 +1,4 @@
 import cv2
-from cv2.gapi import mul
 import numpy as np
 from unittest import mock
 from comic_splitter.panel_detector import PanelDetector
@@ -12,6 +11,8 @@ from comic_splitter.panel_detector import PanelDetector
 
 class TestPanelDetector():
 
+    # TODO: Encapsulate generate_page into util function bc its also used with
+    # test_api.py
     def generate_page(self, rectangle_coords: list[tuple[tuple, tuple]],
                       page_height: int = 3035, page_width: int = 2150,
                       color: tuple = (0, 0, 0), thickness: int = 5):
