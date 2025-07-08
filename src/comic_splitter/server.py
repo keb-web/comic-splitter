@@ -1,5 +1,5 @@
-from fastapi import File, UploadFile, HTTPException, FastAPI
-from typing import List
+from fastapi import File, Form, UploadFile, HTTPException, FastAPI
+from typing import List, Literal
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 from base64 import b64encode
@@ -25,14 +25,13 @@ app.add_middleware(
 VALID_FILE_TYPES = ['jpg', 'png', 'jpeg']
 
 @app.post("/split")
-async def split(files: List[UploadFile] = File(...)):
+async def split(mode: Literal['crop', 'etch'] = Form(...),
+                files: List[UploadFile] = File(...)):
     _check_valid_file_extension(files)
     file_type = files[0].content_type
-
     splitter = ComicSplitter(files)
-    panels = await splitter.split()
+    panels = await splitter.split(mode=mode)
     encoded_files = [b64encode(p).decode('utf-8') for p in panels]
-
     return {'image_type': file_type, 'images': encoded_files}
 
 def _check_valid_file_extension(files: List[UploadFile]):

@@ -11,7 +11,7 @@ from comic_splitter.media_packager import MediaPackager
 from comic_splitter.panel_detector import PanelDetector
 
 class ComicSplitter:
-    def __init__(self,files: list[UploadFile]):
+    def __init__(self, files: list[UploadFile]):
         self.files = files
         self.cropper = ImageCropper()
         self.etcher = Etcher()
@@ -52,6 +52,10 @@ class ComicSplitter:
             for i in range(len(self.files)):
                 panel_imgs.append(self.etcher.etch(
                     pages[i], panels[i]))
+                # TODO: someway to use options to toggle this
+                # panel_imgs.append(self.etcher.etch(
+                #     pages[i], panels[i], blank=True))
+
         return panel_imgs
 
     def encode_panels_to_bytes(self, panel_imgs, format: str = '.jpg'):

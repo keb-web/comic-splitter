@@ -12,11 +12,16 @@ function SubmitImage({ setSplitImages }) {
 		if (!_valid_file_extension(formData)) {
 			return
 		}
+		const mode = form.elements.mode.value;
+		formData.append("mode", mode);
 		retrieveSplitImages(formData, form)
 	}
 
 	function _valid_file_extension(formData) {
 		for (var pair of formData.entries()) {
+			if (pair[0] == 'mode') {
+				continue
+			}
 			let filetype = pair[1].type
 			if (valid_filetypes.includes(filetype) == false) {
 				return false
@@ -24,13 +29,13 @@ function SubmitImage({ setSplitImages }) {
 		}
 		return true
 	}
+
 	async function retrieveSplitImages(formData, form) {
 		const some_endpoint = 'http://127.0.0.1:8000/split'
 		try {
 			const response = await fetch(some_endpoint, {
 				method: form.method,
 				body: formData,
-				// headers: { "Content-Type": "multipart/form-data" }
 			});
 			if (!response.ok) {
 				throw new Error('Response status: ${response.status}');
@@ -45,6 +50,14 @@ function SubmitImage({ setSplitImages }) {
 	return (
 		<form method='post' onSubmit={handleSubmit}>
 			<input name='files' type='file' accept='image/png, image/jpeg, image/jpg' multiple />
+			<label>
+				<input type="radio" name="mode" value="crop" defaultChecked />
+				Crop
+			</label>
+			<label>
+				<input type="radio" name="mode" value="etch" />
+				Etch
+			</label>
 			<button type="reset" onClick={() => { setSplitImages([]) }}>Reset form</button>
 			<button type="submit">Submit form</button>
 			<hr />
@@ -52,48 +65,23 @@ function SubmitImage({ setSplitImages }) {
 	);
 }
 
-//  TODO: understand difference
-//
-//
-// function ImagePreview({ splitImages }) {
-// 	if (splitImages.length == 0) {
-// 		return <p> upload comic file to preview pages</p>
-// 	}
-//
-// 	console.log('s', splitImages)
-// 	function formatImgSrc(image) {
-// 		return `data:image/${splitImages.image_type};base64,${image.images}`;
-// 	}
-// 	const imageType = splitImages.image_type.split('/')[1];
-//   	const previewImages = splitImages.images.map(formatImgSrc);
-// 	console.log(previewImages)
-//
-// 	return (
-// 		<div>
-// 			{previewImages.map((image, index) => (
-// 				<img key={index} src={image} alt={`img-${index}`} />
-// 			))}
-// 		</div>
-// 	);
-// }
-
 function ImagePreview({ splitImages }) {
-  if (!splitImages || !splitImages.images) {
-    return <div>No images to preview</div>;
-  }
+	if (!splitImages || !splitImages.images) {
+		return <div>No images to preview</div>;
+	}
 
-  const imageType = splitImages.image_type.split('/')[1];
-  const previewImages = splitImages.images.map((base64) =>
-    `data:image/${imageType};base64,${base64}`
-  );
+	const imageType = splitImages.image_type.split('/')[1];
+	const previewImages = splitImages.images.map((base64) =>
+		`data:image/${imageType};base64,${base64}`
+	);
 
-  return (
-    <div>
-      {previewImages.map((src, index) => (
-        <img key={index} src={src} alt={`img-${index}`} />
-      ))}
-    </div>
-  );
+	return (
+		<div>
+			{previewImages.map((src, index) => (
+				<img key={index} src={src} alt={`img-${index}`} />
+			))}
+		</div>
+	);
 }
 
 

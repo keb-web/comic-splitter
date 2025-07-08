@@ -11,10 +11,10 @@ client = TestClient(app)
 class TestAPI:
     def test_invalid_filetype_posted_returns_error(self):
         fake_image = BytesIO(b"fake image content")
+        data = {'mode': 'crop'}
         files = [("files", ("FakeFile.badtype", fake_image, "image/badtype"))]
 
-        response = client.post("/split", files=files)
-
+        response = client.post("/split", files=files, data=data)
         assert response.status_code == 400
         assert response.json() == {'detail': 'invalid filetype'}
 
@@ -30,7 +30,7 @@ class TestAPI:
                           color=color, thickness=thickness)
         return page
 
-    # TODO: iterate iterate iterate!!
+    # TODO: add color scheming so we can verify panels
     def test_valid_filetype_posted_returns_split_panels_as_pages(self):
         top_panel = ((150, 100), (2020, 1444))
         bottom_panel =  ((150, 1520), (2020, 2911))
@@ -39,13 +39,33 @@ class TestAPI:
                 top_panel, bottom_panel
             ]
         )
-
         _, encoded_img = cv2.imencode('.png', two_stacked_panels_page)
         fake_image = BytesIO(encoded_img.tobytes())
-
+        data = {'mode': 'crop'}
         files = [("files", ("FakeFile.png", fake_image, "image/png"))]
-        response = client.post("/split", files=files)
+
+        response = client.post("/split", files=files, data=data)
+        assert response.status_code == 200
 
         data = response.json()
-        assert response.status_code == 200
         assert len(data['images']) == 2
+
+    def test_valid_filetype_posted_returns_etched_panels_as_pages(self):
+        top_panel = ((150, 100), (2020, 1444))
+        bottom_panel =  ((150, 1520), (2020, 2911))
+        two_stacked_panels_page = self.generate_page(
+            rectangle_coords=[
+                top_panel, bottom_panel
+            ]
+        )
+        _, encoded_img = cv2.imencode('.png', two_stacked_panels_page)
+        fake_image = BytesIO(encoded_img.tobytes())
+        data = {'mode': 'etch'}
+        files = [("files", ("FakeFile.png", fake_image, "image/png"))]
+
+        response = client.post("/split", files=files, data=data)
+        assert response.status_code == 200
+
+        data = response.json()
+        assert len(data['images']) == 1
+
