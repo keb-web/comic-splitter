@@ -3,6 +3,11 @@ import './App.css'
 
 
 function SubmitImage({ setSplitImages }) {
+	const [label, setLabel] = useState(false)
+	const [blank, setBlank] = useState(false)
+	const [margins, setMargins] = useState(0)
+	const [mode, setMode] = useState('crop')
+
 	const valid_filetypes = ['image/jpeg', 'image/png', 'image/jpg']
 
 	function handleSubmit(e) {
@@ -12,20 +17,20 @@ function SubmitImage({ setSplitImages }) {
 		if (!_valid_file_extension(formData)) {
 			return
 		}
-		const mode = form.elements.mode.value;
+
+		formData.append("label", label);
+		formData.append("blank", blank);
+		formData.append("margins", margins);
 		formData.append("mode", mode);
+
 		retrieveSplitImages(formData, form)
 	}
 
 	function _valid_file_extension(formData) {
-		for (var pair of formData.entries()) {
-			if (pair[0] == 'mode') {
-				continue
-			}
-			let filetype = pair[1].type
-			if (valid_filetypes.includes(filetype) == false) {
-				return false
-			}
+		const file = formData.get('files')
+		if (valid_filetypes.includes(file.type) == false) {
+			console.error('Invalid File Type')
+			return false
 		}
 		return true
 	}
@@ -54,13 +59,24 @@ function SubmitImage({ setSplitImages }) {
 			<button type="submit">Submit form</button>
 			<div class='formSettings'>
 				<label>
-					<input type="radio" name="mode" value="crop" defaultChecked />
+					<input type="radio" name="mode" value="crop" checked={mode == 'crop'} onChange={() => setMode('crop')}/>
 					Crop
 				</label>
 				<label>
-					<input type="radio" name="mode" value="etch" />
+					<input type="radio" name="mode" value="etch" checked={mode == 'etch'} onChange={() => setMode('etch')}/>
 					Etch
 				</label>
+				<label>
+					<input type="checkbox" id="label" name="label" value="label" checked={label} onChange={(e) => setLabel(e.target.checked)}/>
+					Label
+				</label>
+				<label>
+					<input type="checkbox" id="blank" name="blank" value="blank" checked={blank} onChange={(e) => setBlank(e.target.checked)}/>
+					Blank
+				</label>
+				<label>
+					Margins
+					<input type="number" id="margins" name="margins" min='0' max='90' value={margins} onChange={(e) => setMargins(e.target.value)}/> </label>
 			</div>
 			<hr />
 		</form>

@@ -10,16 +10,23 @@ from comic_splitter.etcher import Etcher
 from comic_splitter.media_packager import MediaPackager
 from comic_splitter.panel_detector import PanelDetector
 
+# BUG: 
+# apply options before cropping/etching 
+#   (options, except for margins, should only work on etch)
+# margins don't work as expected
+
 class ComicSplitter:
-    def __init__(self, files: list[UploadFile]):
+    def __init__(self, files: list[UploadFile], options: dict):
         self.files = files
+        self.options = options
         self.cropper = ImageCropper()
         self.etcher = Etcher()
-        self.detector = PanelDetector()
+        self.detector = PanelDetector(margins=options['margins'])
 
-    async def split(self, mode: Literal['crop', 'etch'] = 'crop') -> list:
+    async def split(self) -> list:
         comic_pages, page_panels = await self._extract_images_and_panels()
-        panel_imgs = self.generate_panel_images(mode, comic_pages, page_panels)
+        panel_imgs = self.generate_panel_images(self.options['mode'],
+                                                comic_pages, page_panels)
         return self.encode_panels_to_bytes(panel_imgs)
         # package zip (optional)
         # return list of new files (bytes) and cache zip?? (optional)
@@ -50,15 +57,12 @@ class ComicSplitter:
                     pages[i], panels[i]))
         elif mode == 'etch':
             for i in range(len(self.files)):
-                # panel_imgs.append(self.etcher.etch(
-                #     pages[i], panels[i]))
-                # TODO: someway to use options to toggle this
-                # panel_imgs.append(self.etcher.etch(
-                #     pages[i], panels[i], blank=True))
-                # BUG: labeling got broken
-                panel_imgs.append(self.etcher.etch(
-                    pages[i], panels[i], labels=True))
 
+                # BUG: labeling got broke (horiz panels?)
+                panel_imgs.append(
+                    self.etcher.etch(pages[i], panels[i],
+                                     label=self.options['label'],
+                                     blank=self.options['blank']))
         return panel_imgs
 
     def encode_panels_to_bytes(self, panel_imgs, format: str = '.jpg'):

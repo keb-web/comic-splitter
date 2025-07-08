@@ -30,3 +30,7 @@ button{
 	display: block;
 	margin: 2px;
 }
+
+input {
+	margin: 5px
+}

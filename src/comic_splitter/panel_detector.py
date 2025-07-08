@@ -5,8 +5,8 @@ from cv2.typing import MatLike
 import numpy as np
 
 class PanelDetector:
-    def __init__(self, margin: int = 0):
-        self.margin = margin
+    def __init__(self, margins: int = 0):
+        self.margins = margins
 
     def detect_panels(self, page: MatLike):
         contours = self.get_panel_contours(page)
@@ -48,11 +48,11 @@ class PanelDetector:
     def _apply_margins(self, x: int, y: int, width: int, height: int,
                        page: MatLike):
         img_width, img_height = page.shape
-        if self.margin != 0:
-            x = max(x - self.margin, 0)
-            y = max(y - self.margin, 0)
-            width = min(width + self.margin * 2, img_width - x)
-            height = min(height + self.margin * 2, img_height - y)
+        if self.margins != 0:
+            x = max(x - self.margins, 0)
+            y = max(y - self.margins, 0)
+            width = min(width + self.margins * 2, img_width - x)
+            height = min(height + self.margins * 2, img_height - y)
         return((x, y, width, height))
 
     def get_indexed_panels(self, panel_rects: list[tuple]) -> list[tuple]:

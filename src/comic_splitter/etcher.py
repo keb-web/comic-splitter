@@ -4,8 +4,8 @@ from numpy.typing import NDArray
 
 class Etcher:
 
-    def etch(self, page: np.ndarray, rectangles: list,
-             labels: bool = False, blank: bool = False) -> NDArray:
+    def etch(self, page: np.ndarray, rectangles: list, label: bool = False,
+             blank: bool = False) -> NDArray:
         page = cv2.cvtColor(page, cv2.COLOR_GRAY2BGR)
         height, width, _ = page.shape
         canvas = np.ones((height,width,3), np.uint8) if blank else page.copy()
@@ -13,7 +13,7 @@ class Etcher:
         for (x, y, w, h) in rectangles:
             cv2.rectangle(canvas, (x, y), (x + w, y + h), (0, 0, 255), 3)
 
-        if labels:
+        if label:
             self.draw_label_contours(canvas, rectangles)
 
         return canvas
