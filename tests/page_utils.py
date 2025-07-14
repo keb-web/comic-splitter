@@ -9,13 +9,11 @@ class PageUtils:
                       color: tuple = (0, 0, 0), thickness: int = 5):
 
         page = np.ones((page_height, page_width), dtype=np.uint8) * 255
-        for coord in rectangle_coords:
-            start_xy, end_xy = coord[0], coord[1]
-            cv2.rectangle(page, start_xy, end_xy,
+        for top_left, bottom_right in rectangle_coords:
+            cv2.rectangle(page, top_left, bottom_right,
                           color=color, thickness=thickness)
         return page
 
-class VisionUtils:
     def draw_labels(self, img: np.ndarray, contours):
         # height, width = img.shape
         # empty_image = np.ones((height, width), dtype=np.int8)

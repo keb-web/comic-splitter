@@ -4,8 +4,6 @@ import cv2
 from cv2.typing import MatLike
 import numpy as np
 
-# from tests.page_utils import VisionUtils
-
 # BUG: panel detection for nested panels
 
 class PanelDetector:
