@@ -1,17 +1,24 @@
+from typing import Literal
 import numpy as np
 import cv2
 from numpy.typing import NDArray
 
+
 class Etcher:
 
-    def etch(self, page: np.ndarray, rectangles: list, label: bool = False,
-             blank: bool = False) -> NDArray:
+    def etch(self, page: np.ndarray, rectangles: list,
+             label: bool = False, blank: bool = False,
+             mode: Literal["BORDER", "RECTANGLES"] = "RECTANGLES" ) -> NDArray:
+
         page = cv2.cvtColor(page, cv2.COLOR_GRAY2BGR)
         height, width, _ = page.shape
         canvas = np.ones((height,width,3), np.uint8) if blank else page.copy()
 
         for (x, y, w, h) in rectangles:
-            cv2.rectangle(canvas, (x, y), (x + w, y + h), (0, 0, 255), 3)
+            if mode == 'RECTANGLES':
+                cv2.rectangle(canvas, (x, y), (x + w, y + h), (0, 0, 255), -1)
+            elif mode == 'BORDER':
+                cv2.rectangle(canvas, (x, y), (x + w, y + h), (0, 0, 255), 3)
 
         if label:
             self.draw_label_contours(canvas, rectangles)

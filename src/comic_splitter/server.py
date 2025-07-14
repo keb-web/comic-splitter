@@ -23,6 +23,8 @@ app.add_middleware(
 
 VALID_FILE_TYPES = ['jpg', 'png', 'jpeg']
 
+# TODO: add panel size slider to frontend & feed as parameter to split
+
 @app.post("/split")
 async def split(mode: Literal['crop', 'etch'] = Form('crop'),
                 blank: bool = Form(False),

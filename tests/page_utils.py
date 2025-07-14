@@ -16,15 +16,13 @@ class PageUtils:
         return page
 
 class VisionUtils:
-    def draw_labels(self, img, contours, splitter):
-        height, width = img.shape
-        empty_image = np.zeros((height, width), dtype=np.int8)
-        labeled_image = splitter.draw_contour(empty_image, contours, True)
+    def draw_labels(self, img: np.ndarray, contours):
+        # height, width = img.shape
+        # empty_image = np.ones((height, width), dtype=np.int8)
+        page = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        labeled_image = cv2.drawContours(
+            page, contours, -1, (0, 255, 0), 3)
         self.save_image(labeled_image)
-
-    def view_image(self, img: np.ndarray):
-        cv2.imshow('test_window', img)
-        cv2.waitKey(0)
     
     def save_image(self, img: np.ndarray,
                    filename: str = 'debug_output'):
@@ -32,3 +30,7 @@ class VisionUtils:
             os.path.join(os.path.dirname(__file__), '..'))
         save_path = os.path.join(project_root, f'{filename}.jpg')
         cv2.imwrite(save_path, img)
+
+    def view_image(self, img: np.ndarray):
+        cv2.imshow('test_window', img)
+        cv2.waitKey(0)

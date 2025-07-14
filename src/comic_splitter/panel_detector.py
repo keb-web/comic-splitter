@@ -4,29 +4,63 @@ import cv2
 from cv2.typing import MatLike
 import numpy as np
 
-class PanelDetector:
-    def __init__(self, margins: int = 0):
-        self.margins = margins
+# from tests.page_utils import VisionUtils
 
-    def detect_panels(self, page: MatLike):
+# BUG: panel detection for nested panels
+
+class PanelDetector:
+    def __init__(self, margins: int = 0, min_panel_area: int = -1):
+        self.margins = margins
+        self.min_panel_area = min_panel_area
+
+    def detect_panels(self, page: MatLike) -> list[tuple]:
         contours = self.get_panel_contours(page)
         rects = self.get_panel_shapes(contours, page)
         panels = self.get_indexed_panels(rects)
         return panels
 
     def get_panel_contours(self, page: MatLike) -> list[np.ndarray]:
+        # TODO: disk morphology or dilate to try to fix gaps
+        # or try all transformations and see what works best
+        # or try solution proposed in readme
+        # dilation kind of works...readme seems better solution
+
         edge_page = self._preprocess_image(page)
+
         contours, _ = cv2.findContours(
             edge_page, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        ## add more contour checking here
+
+
+        ## 
+
+        contours = self._remove_small_contours(contours)
+
         return self._approximate_contours(contours)
 
     def _preprocess_image(self, page: np.ndarray) -> np.ndarray:
+
+        # kernel = np.ones((10,10),np.uint8)
+        # erosion_page = cv2.erode(page, kernel,iterations = 10)
+        # dilate_page = cv2.dilate(erosion_page, kernel,iterations = 10)
+        # blur_page = cv2.GaussianBlur(dilate_page, (5, 5), 0)
+
         blur_page = cv2.GaussianBlur(page, (5, 5), 0)
         thresh_page = cv2.threshold(blur_page, 0, 255,
                                     cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
         edge_page = cv2.Canny(thresh_page, 30, 200)
+
         return edge_page
 
+    def _remove_small_contours(self, contours: Sequence[MatLike]):
+        big_contours = []
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if area >= self.min_panel_area:
+                big_contours.append(contour)
+        return big_contours
+    
     def _approximate_contours(self,
                               contours: Sequence[MatLike]) -> list[np.ndarray]:
         approximate_contours = []

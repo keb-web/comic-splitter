@@ -41,7 +41,7 @@ class TestAPI:
         )
         _, encoded_img = cv2.imencode('.png', two_stacked_panels_page)
         fake_image = BytesIO(encoded_img.tobytes())
-        data = {'mode': 'crop'}
+        data = {'mode': 'crop', 'label': False, 'blank': False, 'margin': 0}
         files = [("files", ("FakeFile.png", fake_image, "image/png"))]
 
         response = client.post("/split", files=files, data=data)
@@ -60,7 +60,7 @@ class TestAPI:
         )
         _, encoded_img = cv2.imencode('.png', two_stacked_panels_page)
         fake_image = BytesIO(encoded_img.tobytes())
-        data = {'mode': 'etch'}
+        data = {'mode': 'etch', 'label': False, 'blank': False, 'margin': 0}
         files = [("files", ("FakeFile.png", fake_image, "image/png"))]
 
         response = client.post("/split", files=files, data=data)

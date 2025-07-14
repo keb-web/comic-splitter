@@ -13,7 +13,7 @@ from comic_splitter.panel_detector import PanelDetector
 # BUG: 
 # apply options before cropping/etching 
 #   (options, except for margins, should only work on etch)
-# margins don't work as expected
+# margins don't work as expected in some cases
 
 class ComicSplitter:
     def __init__(self, files: list[UploadFile], options: dict):

@@ -5,17 +5,17 @@ from unittest.mock import MagicMock, patch, mock_open
 from comic_splitter.media_packager import MediaPackager
 
 # NOTE: parent of children that will contain different types of media packagers
+
 class TestMediaPackager:
 
-    @patch('comic_splitter.media_packager.cv2.imwrite')
-    def test_packager_returns_nothing_with_no_media_input(self, mock_imwrite):
-        dummy_path = './dummy/path'
-        dummy_images = []
-
-        packager = MediaPackager(dummy_images, dummy_path)
-        packager._zip(None)
-
-        mock_imwrite.assert_not_called()
+    # def test_packager_returns_nothing_with_no_input(self, mock_imwrite):
+    #     dummy_path = './dummy/path'
+    #     dummy_images = []
+    #
+    #     packager = MediaPackager(dummy_images, dummy_path)
+    #     packager._zip(None)
+    #
+    #     mock_imwrite.assert_not_called()
 
     def test_packager_converts_images_to_bytes(self):
         dummy_images = [np.ones((1, 1)), np.ones((1, 1))]

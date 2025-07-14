@@ -7,6 +7,7 @@ function SubmitImage({ setSplitImages }) {
 	const [blank, setBlank] = useState(false)
 	const [margins, setMargins] = useState(0)
 	const [mode, setMode] = useState('crop')
+	// const [kernel, setKernel] = useState('kernel)
 
 	const valid_filetypes = ['image/jpeg', 'image/png', 'image/jpg']
 
@@ -76,7 +77,7 @@ function SubmitImage({ setSplitImages }) {
 				</label>
 				<label>
 					Margins
-					<input type="number" id="margins" name="margins" min='0' max='90' value={margins} onChange={(e) => setMargins(e.target.value)}/> </label>
+					<input type="number" id="margins" name="margins" min='0' max='25' value={margins} onChange={(e) => setMargins(e.target.value)}/> </label>
 			</div>
 			<hr />
 		</form>
