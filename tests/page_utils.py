@@ -1,10 +1,11 @@
 import numpy as np
 import cv2
 import os
+import matplotlib.pyplot as plt
 
 class PageUtils:
 
-    def generate_page(self, rectangle_coords: list[tuple[tuple, tuple]],
+    def generate_page(self, rectangle_coords: list[tuple[tuple, tuple]] = [],
                       page_height: int = 3035, page_width: int = 2150,
                       color: tuple = (0, 0, 0), thickness: int = 5):
 
@@ -15,13 +16,46 @@ class PageUtils:
         return page
 
     def draw_labels(self, img: np.ndarray, contours):
-        # height, width = img.shape
-        # empty_image = np.ones((height, width), dtype=np.int8)
         page = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         labeled_image = cv2.drawContours(
             page, contours, -1, (0, 255, 0), 3)
-        self.save_image(labeled_image)
-    
+        self.save_image(labeled_image, 'labeled_output')
+
+    def draw_lines(self, img, horiz_lines: list, vert_lines: list):
+        if len(img.shape) < 3:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        for y in horiz_lines:
+            img = self.draw_horiz_line(img, y)
+        for x in vert_lines:
+            img = self.draw_vertical_line(img, x)
+        return img
+
+    def draw_vertical_line(self, img: np.ndarray, x: int):
+        if len(img.shape) < 3:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        height, _, _ = img.shape
+        cv2.line(img, (x, 0), (x, height), (0, 0, 255), 1)
+        return img
+
+    def draw_horiz_line(self, img: np.ndarray, y: int):
+        if len(img.shape) < 3:
+            img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+        _, width, _ = img.shape
+        cv2.line(img, (0, y), (width, y), (0, 0, 255), 1)
+        return img
+
+    def _plot_proj(self, proj):
+        x, y = [], []
+        for idx, val in enumerate(proj):
+            print(idx, val)
+            x.append(idx)
+            y.append(val)
+        plt.plot(x, y)
+        plt.xlabel("X-axis")
+        plt.ylabel("Y-axis")
+        plt.title("projection")
+        plt.show()
+
     def save_image(self, img: np.ndarray,
                    filename: str = 'debug_output'):
         project_root = os.path.abspath(

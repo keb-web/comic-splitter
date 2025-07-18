@@ -118,7 +118,7 @@ class TestPanelDetector():
         slight_outer_panel = ((95,95), (1205, 2905))
         inner_panel_1 = ((200, 200), (1100, 1400))   # Top-left quarter
         panel_1_child = ((250, 250), (1000, 1200))   # inside inner_panel_1
-        inner_panel_2 = ((200, 1500), (1100, 2700)) # Bottom-right
+        inner_panel_2 = ((200, 1500), (1100, 2700))  # Bottom-right
         unrelated_panel = ((1300, 95), (2000, 2900))
         nested_panel_page = utils.generate_page(
             rectangle_coords=[
