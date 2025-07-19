@@ -21,3 +21,4 @@ class TestCropper:
         assert len(new_pages) == 1
         assert new_pages[0].shape == (200, 200)
         assert type(new_pages[0]) == np.ndarray
+
