@@ -170,7 +170,7 @@ class TestPanelDetector():
         filtered_contours = detector._remove_small_contours(contours)
         assert len(filtered_contours) == 1
 
-    @pytest.mark.skip(reason=' issues')
+    @pytest.mark.skip(reason='issues')
     def test_panel_detects_panel_partially_out_of_bounds_of_page(self):
         out_of_bounds_panel = ((-1, -1), (2000, 2750))
         out_of_bounds_page = utils.generate_page(

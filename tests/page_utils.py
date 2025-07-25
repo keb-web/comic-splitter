@@ -21,14 +21,15 @@ class PageUtils:
         #                   color=color, thickness=thickness)
         return page
 
-    def generate_polygonal_page(self, coords: NDArray, fill: bool = False,
+    def generate_polygonal_page(self, coords: NDArray, fill: bool = True,
                       page_height: int = 3035, page_width: int = 2150,
                       color: tuple = (0, 0, 0), thickness: int = 5):
         page = np.ones((page_height, page_width), dtype=np.uint8) * 255
         polygons = coords.reshape((-1, 3, 2))
         for poly in polygons:
-            poly = poly.reshape((-1, 1, 2))  # shape (3, 1, 2) for OpenCV
-            cv2.polylines(page, [poly], isClosed=True, color=color, thickness=thickness)
+            poly = poly.reshape((-1, 1, 2))
+            cv2.polylines(page, [poly], isClosed=fill,
+                          color=color, thickness=thickness)
         return page
 
     def draw_labels(self, img: np.ndarray, contours):

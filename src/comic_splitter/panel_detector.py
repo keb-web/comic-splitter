@@ -7,6 +7,9 @@ import numpy as np
 # BUG: panel detection for nested panels
 
 class PanelDetector:
+    '''
+    Panel Detection by contours
+    '''
     def __init__(self, margins: int = 0, min_panel_area: int = -1):
         self.margins = margins
         self.min_panel_area = min_panel_area
