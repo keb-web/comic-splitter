@@ -152,7 +152,7 @@ class TestPanelDetector():
             rectangle_coords=[((50, 50), (200, 200))],
             page_height = 400, page_width = 400
         )
-        detector = PanelDetector(margin=25)
+        detector = PanelDetector(margins=25)
         contours = detector.get_panel_contours(page=test_page)
         shapes = detector.get_panel_shapes(contours, test_page)
         panel = detector.get_indexed_panels(shapes)
