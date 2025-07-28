@@ -1,17 +1,8 @@
-from dataclasses import dataclass
 from typing import Literal
 import cv2
 from cv2.typing import MatLike
 import numpy as np
 from numpy.typing import NDArray
-
-# NOTE: gutter detection bc contours r messy
-# the plan
-# preprocess
-# invert to white gutters if needed (calc tot avg color?)
-# gutter detection with horiz/vert projection
-# save intersections
-
 
 class Panel:
     def __init__(self, bounds, x, y):
@@ -108,16 +99,6 @@ class GutterDetector:
         uniq = np.unique_counts(projection)
         if len(uniq.counts) == 1 and uniq.counts == len(page):
             return np.empty((0,0))
-
-        # NOTE: instead of some gutter value, instead we can
-        # detect the slice of pixel where a large dip/raise in sum is found
-        # this will mark a gutter (raise=start, dip = end)
-        # how will you determine what defines 'large?'
-
-        # TODO:
-        # we can recursive continue calling this function on cropped 
-        # sections of the image until we obtain a workable solution
-        # the height of the leaf determines a natural hierarchy
 
         gutter_value = int(np.max(projection))
         gutter_indices = np.where(projection >= gutter_value)

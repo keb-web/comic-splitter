@@ -1,5 +1,4 @@
 import cv2
-from cv2.gapi import mul
 import numpy as np
 import pytest
 import unittest
