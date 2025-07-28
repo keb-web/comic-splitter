@@ -45,25 +45,24 @@ class GutterDetector:
     def __init__(self):
         pass
 
+
     def detect_panels(self, page: MatLike) -> list[Panel]:
         subpanels = []
-        bounds_arr = self.get_page_bounds(page)
-
-        st = bounds_arr
+        st = self.get_page_bounds(page)
         while st:
             bounds = st.pop()
-            v_gutters, h_gutters = self.detect_gutters(page, bounds)
-            if len(v_gutters) <= 2 and len(h_gutters) <= 2:
-                _, x, y = self.get_bounded_page(bounds, page)
-                p = Panel(bounds, x, y)
-                subpanels.append(p)
+            v_gutters, h_gutters, x, y = self.detect_gutters(page, bounds)
+            if self._single_panel(h_gutters, v_gutters):
+                subpanels.append(Panel(bounds, x, y))
             else:
-                sects = self.get_intersections(v_gutters, h_gutters)
-                new_bounds = self.get_panel_bounds_from_intersections(sects)
+                intersections = self.get_intersections(v_gutters, h_gutters)
+                new_bounds = self.get_panel_bounds_from_intersections(
+                    intersections)
                 st.extend(new_bounds)
-
-        print('sub_panels', subpanels)
         return subpanels
+
+    def _single_panel(self, h_gutters, v_gutters):
+        return len(v_gutters) <= 2 and len(h_gutters) <= 2
 
     def detect_gutters(self, page: MatLike, bounds: tuple):
         page, x, y = self.get_bounded_page(bounds, page)
@@ -74,34 +73,7 @@ class GutterDetector:
         v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)]
         h_gutters = [gutter + y for gutter in self._centralize_indices(h_proj)]
 
-        return (v_gutters, h_gutters)
-
-        # dumbing stuff down
-        intersections = self.get_intersections(v_gutters, h_gutters)
-        new_bounds = self.get_panel_bounds_from_intersections(intersections)
-        # print(new_bounds)
-        # [((4, 4), (45, 4), (4, 45), (45, 45)),
-        # ((4, 45), (45, 45), (4, 95), (45, 95))]
-
-        b = new_bounds[0]
-        page, x, y = self.get_bounded_page(b, page)
-        v_proj = self._get_projection_indices(page, 'vertical')
-        h_proj = self._get_projection_indices(page, 'horizontal')
-        v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)]
-        h_gutters = [gutter + y for gutter in self._centralize_indices(h_proj)]
-        gutters.append((v_gutters, h_gutters))
-
-
-        b = new_bounds[0]
-        page, x, y = self.get_bounded_page(b, page)
-        v_proj = self._get_projection_indices(page, 'vertical')
-        h_proj = self._get_projection_indices(page, 'horizontal')
-        v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)]
-        h_gutters = [gutter + y for gutter in self._centralize_indices(h_proj)]
-        gutters.append((v_gutters, h_gutters))
-
-        return gutters
-        
+        return (v_gutters, h_gutters, x, y)
 
     def get_page_bounds(self, page: MatLike) -> list[tuple]:
         cols, rows = len(page), len(page[0])
