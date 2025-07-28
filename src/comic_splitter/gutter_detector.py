@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Literal
 import cv2
 from cv2.typing import MatLike
@@ -12,26 +13,103 @@ from numpy.typing import NDArray
 # save intersections
 
 
+class Panel:
+    def __init__(self, bounds, x, y):
+        self.bounds = bounds
+        self.top_left = bounds[0]
+        self.top_right = bounds[1]
+        self.bottom_left = bounds[2]
+        self.bottom_right = bounds[3]
+        self.x_offset = x
+        self.y_offset = y
+        self.centroid = self._centroid(self.top_left, self.bottom_right)
+        self.index = {}
+
+    def _centroid(self, tl, br):
+        x1, y1 = tl
+        x2, y2 = br
+        return ((x1+x2)/2, (y1+y2)/2)
+    
+    def set_index(self, index, type = 'lhs'):
+        self.index[type] = index
+
+    def __repr__(self):
+        return f'{self.centroid}'
+
 class GutterDetector:
     '''
-    Gutter Detection by Projection
+    Panel Detection by Gutter
+    Gutter Detection by Vertical & Horizontal Projection
     '''
 
     def __init__(self):
         pass
 
-    def get_page_bounds(self, page: MatLike):
-        cols = len(page)
-        rows = len(page[0])
-        top_left = (0, 0)
-        top_right = (rows, 0)
-        bottom_left = (0, cols)
-        bottom_right = (rows, cols)
-        return (top_left, top_right, bottom_left, bottom_right)
+    def detect_panels(self, page: MatLike) -> list[Panel]:
+        subpanels = []
+        bounds_arr = self.get_page_bounds(page)
 
-    def _detect_gutters(self, page: MatLike, bounds: tuple) -> tuple:
-        '''temp tree version'''
+        st = bounds_arr
+        while st:
+            bounds = st.pop()
+            v_gutters, h_gutters = self.detect_gutters(page, bounds)
+            if len(v_gutters) <= 2 and len(h_gutters) <= 2:
+                _, x, y = self.get_bounded_page(bounds, page)
+                p = Panel(bounds, x, y)
+                subpanels.append(p)
+            else:
+                sects = self.get_intersections(v_gutters, h_gutters)
+                new_bounds = self.get_panel_bounds_from_intersections(sects)
+                st.extend(new_bounds)
 
+        print('sub_panels', subpanels)
+        return subpanels
+
+    def detect_gutters(self, page: MatLike, bounds: tuple):
+        page, x, y = self.get_bounded_page(bounds, page)
+
+        v_proj = self._get_projection_indices(page, 'vertical')
+        h_proj = self._get_projection_indices(page, 'horizontal')
+
+        v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)]
+        h_gutters = [gutter + y for gutter in self._centralize_indices(h_proj)]
+
+        return (v_gutters, h_gutters)
+
+        # dumbing stuff down
+        intersections = self.get_intersections(v_gutters, h_gutters)
+        new_bounds = self.get_panel_bounds_from_intersections(intersections)
+        # print(new_bounds)
+        # [((4, 4), (45, 4), (4, 45), (45, 45)),
+        # ((4, 45), (45, 45), (4, 95), (45, 95))]
+
+        b = new_bounds[0]
+        page, x, y = self.get_bounded_page(b, page)
+        v_proj = self._get_projection_indices(page, 'vertical')
+        h_proj = self._get_projection_indices(page, 'horizontal')
+        v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)]
+        h_gutters = [gutter + y for gutter in self._centralize_indices(h_proj)]
+        gutters.append((v_gutters, h_gutters))
+
+
+        b = new_bounds[0]
+        page, x, y = self.get_bounded_page(b, page)
+        v_proj = self._get_projection_indices(page, 'vertical')
+        h_proj = self._get_projection_indices(page, 'horizontal')
+        v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)]
+        h_gutters = [gutter + y for gutter in self._centralize_indices(h_proj)]
+        gutters.append((v_gutters, h_gutters))
+
+        return gutters
+        
+
+    def get_page_bounds(self, page: MatLike) -> list[tuple]:
+        cols, rows = len(page), len(page[0])
+        top_left, top_right = (0, 0), (rows, 0)
+        bottom_left, bottom_right = (0, cols), (rows, cols)
+        return [(top_left, top_right, bottom_left, bottom_right)]
+
+    def get_bounded_page(self, bounds: tuple, page: MatLike):
         x_values = [bound[0] for bound in bounds]
         y_values = [bound[1] for bound in bounds]
         x = min(x_values)
@@ -39,35 +117,7 @@ class GutterDetector:
         height = max(y_values) - y
         width = max(x_values) - x
         page = page[y: y+height, x: x+width]
-
-        v_proj = self._get_projection_indices(page, 'vertical')
-        h_proj = self._get_projection_indices(page, 'horizontal')
-
-        v_gutters = self._centralize_indices(v_proj)
-        h_gutters = self._centralize_indices(h_proj)
-
-
-        v_gutters = [ gutter + x for gutter in v_gutters]
-        h_gutters = [ gutter + y for gutter in h_gutters]
-
-
-        if len(v_gutters) == 1 and len(h_gutters) == 1:
-            return ()
-
-        return (v_gutters, h_gutters)
-
-    def detect_gutters(self, page: MatLike) -> tuple:
-        # page = self._preprocess_image(page)
-        v_proj = self._get_projection_indices(page, 'vertical')
-        h_proj = self._get_projection_indices(page, 'horizontal')
-
-        v_gutters = self._centralize_indices(v_proj)
-        h_gutters = self._centralize_indices(h_proj)
-
-        if len(v_gutters) == 1 and len(h_gutters) == 1:
-            return ()
-
-        return (v_gutters, h_gutters)
+        return page, x, y
 
     def _preprocess_image(self, page: MatLike) -> np.ndarray:
         # fails unittest
@@ -133,7 +183,7 @@ class GutterDetector:
         x = sorted(set([coord[0] for coord in intersections]))
         y = sorted(set([coord[1] for coord in intersections]))
         points = set(intersections)
-        panels = []
+        panel_bounds = []
         
         for r in range(len(y) - 1):
             panel = []
@@ -147,8 +197,8 @@ class GutterDetector:
                 ]
 
                 if all(p in points for p in panel):
-                    panels.append(tuple(panel))
+                    panel_bounds.append(tuple(panel))
 
-        return panels
+        return panel_bounds
 
 
