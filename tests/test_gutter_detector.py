@@ -14,7 +14,6 @@ class TestGutterDetector(unittest.TestCase):
 
     def test_detector_with_no_panels(self):
         test_page = utils.generate_page([], 50, 50)
-        # need actual single page panel to test with this
         detector = GutterDetector()
         bounds = detector.get_page_bounds(test_page)
         v, h, _, _  = detector.detect_gutters(test_page, bounds[0])
@@ -33,7 +32,8 @@ class TestGutterDetector(unittest.TestCase):
         test_page = utils.generate_page([top_panel, bottom_panel], 100, 50)
         detector = GutterDetector()
         bounds = detector.get_page_bounds(test_page)
-        vert_gutters, horiz_gutters, _, _ = detector.detect_gutters(test_page, bounds[0]) 
+        vert_gutters, horiz_gutters, _, _ = detector.detect_gutters(
+            test_page, bounds[0]) 
 
         assert len(vert_gutters) == 2
         assert len(horiz_gutters) == 3
@@ -48,7 +48,8 @@ class TestGutterDetector(unittest.TestCase):
             [top_panel_left, top_panel_right, bottom_panel],
             page_height=100, page_width=50, thickness=1)
         detector = GutterDetector()
-        panels = [panel.centroid for panel in detector.detect_panels(test_page)]
+        panels = [panel.centroid for panel
+                  in detector.detect_panels(test_page)]
         assert len(panels) == len(dummy_panels)
         for detected, expected in zip(panels, dummy_panels):
             assert detected == pytest.approx(expected, abs=1.0)
@@ -58,21 +59,6 @@ class TestGutterDetector(unittest.TestCase):
         x1, y1 = top_left
         x2, y2 = bottom_right
         return ((x1+x2)/2, (y1+y2)/2)
-    def test_detector_detects_subgutters(self):
-
-        top_panel_left = ((10, 10), (18, 40))
-        top_panel_right = (22, 10), (40, 40)
-        bottom_panel = ((10, 50), (40, 90))
-        test_page = utils.generate_page(
-            [top_panel_left, top_panel_right, bottom_panel],
-            100, 50, thickness=1)
-
-        full_page_bounds = ((0, 0), (100, 0), (0, 50), (100, 50))
-        # top_half_bounds = 
-        # bottom_half_bounds =
-        # detector = GutterDetector()
-        #
-        # gutters = detector.detect_gutters(test_page, bounds)
 
     def test_page_bounds(self):
         test_page = utils.generate_page([((20, 20), (40, 40))], 50, 50)
@@ -144,8 +130,6 @@ class TestGutterDetector(unittest.TestCase):
         central_indices = gutter_detector._centralize_indices(gutter_indices)
         assert central_indices == [2, 15, 37]
 
-    # test gutters with panels  i made myself
-    # multiple
     def test_labeling_page_with_multiple_panels(self):
         multiple_mixed_panels_page = utils.generate_page(
             rectangle_coords=[
@@ -192,19 +176,16 @@ class TestGutterDetector(unittest.TestCase):
 
     def test_get_panels_from_intersections(self):
         detector = GutterDetector()
-
         assert detector.get_panel_bounds_from_intersections([]) == []
 
         top_panel = (
             (0, 0), (10, 0),
             (0, 10), (10, 10)
         )
-
         bottom_panel = ( 
             (0, 10), (10, 10),
             (0, 20), (10, 20)
         ) 
-
         expected_panels = [ top_panel, bottom_panel ]
 
         dummy_intersections = [
@@ -214,7 +195,6 @@ class TestGutterDetector(unittest.TestCase):
         ]
         panels = detector.get_panel_bounds_from_intersections(
             dummy_intersections)
-
         assert panels == expected_panels
 
 
