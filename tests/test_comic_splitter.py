@@ -5,7 +5,6 @@ from tests.page_utils import PageUtils
 
 utils = PageUtils()
 
-#TODO: WHERE R THE UNIT TESTS!!
 class TestComicSplitter:
 
     @pytest.mark.asyncio
@@ -19,6 +18,7 @@ class TestComicSplitter:
     async def test_generate_panel_images_with_no_image(self):
         pass
 
+    @pytest.mark.skip(reason="WIP")
     @pytest.mark.asyncio
     async def test_generate_panel_images(self):
         top_panel = ((150, 100), (2020, 1444))

@@ -25,7 +25,6 @@ class ComicSplitter:
         self.cropper = ImageCropper()
         self.etcher = Etcher()
         self.panel_detector = PanelDetector(margins=options['margins'])
-        self.section_detector = GutterDetector()
 
     async def split(self) -> list:
         await self._extract_panel_pages()
@@ -40,8 +39,8 @@ class ComicSplitter:
     async def _generate_pages(self):
         for page_number, file in enumerate(self.files):
             file_content = await self._decode_bytes_to_matlike_image(file)
-            sections = self.section_detector.detect_panel_subsection(
-                file_content)
+            gd = GutterDetector(file_content)
+            sections = gd.detect_panel_subsection()
             page = Page(content = file_content, sections=sections,
                         page_number=page_number)
             self.book.add_page(page)

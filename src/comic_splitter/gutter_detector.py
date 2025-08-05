@@ -11,46 +11,39 @@ class GutterDetector:
     Panel Section Detection by Gutter
     Gutter Detection by Vertical & Horizontal Projection
     '''
-    def detect_panel_subsection(self, page: MatLike) -> list[PageSection]:
-        subpanels = []
 
-        # TODO: have value adapt to page gutter color
-        page = cv2.copyMakeBorder(page, 4, 4, 4, 4, cv2.BORDER_CONSTANT,
-                                  value = (255, 255, 255))
+    def __init__(self, page):
+        self.page = cv2.copyMakeBorder(page, 4, 4, 4, 4,
+                                       cv2.BORDER_CONSTANT,
+                                       value = (255, 255, 255))
         self.page_boundaries = self.get_page_boundaries(page)
 
+    def detect_panel_subsection(self) -> list[PageSection]:
+        subpanels = []
         st = [self.page_boundaries]
         while st:
             bounds = st.pop()
-            v_gutters, h_gutters, x, y = self.detect_gutters(page, bounds)
-            print('vg: ', v_gutters, 'hg: ', h_gutters, 'x: ', x, 'y: ', y)
+            v_gutters, h_gutters, x, y = self.detect_gutters_and_origin(
+                self.page, bounds)
 
             if self._single_panel(h_gutters, v_gutters):
                 subpanels.append(PageSection(bounds, x, y))
             else:
                 intersections = self.get_intersections(v_gutters, h_gutters)
-                print('intersecitons: ', intersections)
                 new_bounds = self.get_panel_bounds_from_intersections(
                     intersections)
-                print('new_bounds: ', new_bounds)
                 st.extend(new_bounds)
-            print('\n---\n')
-
 
         return subpanels
 
     def _single_panel(self, h_gutters, v_gutters):
         return len(v_gutters) <= 2 and len(h_gutters) <= 2
 
-    def detect_gutters(self, page: MatLike, bounds: tuple):
+    def detect_gutters_and_origin(self, page: MatLike, bounds: tuple):
         page, x, y = self.get_bounded_page(page, bounds)
 
         v_proj = self._get_projection_indices(page, 'vertical')
         h_proj = self._get_projection_indices(page, 'horizontal')
-        
-        print('test')
-
-        print([gutter for gutter in self._centralize_indices(v_proj)])
 
         v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)
             if self._within_page_bounds((gutter + x, 0))]
@@ -60,8 +53,6 @@ class GutterDetector:
         return (v_gutters, h_gutters, x, y)
     
     def _within_page_bounds(self, point):
-        # if self.page_boundaries == ():
-        #     return False
         x, y = point
         bottom_right = self.page_boundaries[3]
         max_x, max_y = bottom_right[0], bottom_right[1]
