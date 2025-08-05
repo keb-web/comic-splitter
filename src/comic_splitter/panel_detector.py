@@ -14,6 +14,7 @@ class PanelDetector:
         self.margins = margins
         self.min_panel_area = min_panel_area
 
+    # TODO: make work with list[PageSection]
     def detect_panels(self, page: MatLike) -> list[tuple]:
         contours = self.get_panel_contours(page)
         rects = self.get_panel_shapes(contours, page)
@@ -21,7 +22,9 @@ class PanelDetector:
         return panels
 
     def get_panel_contours(self, page: MatLike) -> list[np.ndarray]:
-        # TODO: disk morphology or dilate to try to fix gaps
+
+        # TODO: after sectioning,
+        # disk morphology or dilate to try to fix gaps
         # or try all transformations and see what works best
         # or try solution proposed in readme
         # dilation kind of works...readme seems better solution

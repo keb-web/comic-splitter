@@ -4,75 +4,78 @@ from cv2.typing import MatLike
 import numpy as np
 from numpy.typing import NDArray
 
-class Panel:
-    def __init__(self, bounds, x, y):
-        self.bounds = bounds
-        self.top_left = bounds[0]
-        self.top_right = bounds[1]
-        self.bottom_left = bounds[2]
-        self.bottom_right = bounds[3]
-        self.x_offset = x
-        self.y_offset = y
-        self.centroid = self._centroid(self.top_left, self.bottom_right)
-        self.index = {}
-
-    def _centroid(self, tl, br):
-        x1, y1 = tl
-        x2, y2 = br
-        return ((x1+x2)/2, (y1+y2)/2)
-    
-    def set_index(self, index, type = 'lhs'):
-        self.index[type] = index
-
-    def __repr__(self):
-        return f'{self.centroid}'
+from comic_splitter.book import PageSection
 
 class GutterDetector:
     '''
-    Panel Detection by Gutter
+    Panel Section Detection by Gutter
     Gutter Detection by Vertical & Horizontal Projection
     '''
-
-    def __init__(self):
-        pass
-
-
-    def detect_panels(self, page: MatLike) -> list[Panel]:
+    def detect_panel_subsection(self, page: MatLike) -> list[PageSection]:
         subpanels = []
-        st = self.get_page_bounds(page)
+
+        # TODO: have value adapt to page gutter color
+        page = cv2.copyMakeBorder(page, 4, 4, 4, 4, cv2.BORDER_CONSTANT,
+                                  value = (255, 255, 255))
+        self.page_boundaries = self.get_page_boundaries(page)
+
+        st = [self.page_boundaries]
         while st:
             bounds = st.pop()
             v_gutters, h_gutters, x, y = self.detect_gutters(page, bounds)
+            print('vg: ', v_gutters, 'hg: ', h_gutters, 'x: ', x, 'y: ', y)
+
             if self._single_panel(h_gutters, v_gutters):
-                subpanels.append(Panel(bounds, x, y))
+                subpanels.append(PageSection(bounds, x, y))
             else:
                 intersections = self.get_intersections(v_gutters, h_gutters)
+                print('intersecitons: ', intersections)
                 new_bounds = self.get_panel_bounds_from_intersections(
                     intersections)
+                print('new_bounds: ', new_bounds)
                 st.extend(new_bounds)
+            print('\n---\n')
+
+
         return subpanels
 
     def _single_panel(self, h_gutters, v_gutters):
         return len(v_gutters) <= 2 and len(h_gutters) <= 2
 
     def detect_gutters(self, page: MatLike, bounds: tuple):
-        page, x, y = self.get_bounded_page(bounds, page)
+        page, x, y = self.get_bounded_page(page, bounds)
 
         v_proj = self._get_projection_indices(page, 'vertical')
         h_proj = self._get_projection_indices(page, 'horizontal')
+        
+        print('test')
 
-        v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)]
-        h_gutters = [gutter + y for gutter in self._centralize_indices(h_proj)]
+        print([gutter for gutter in self._centralize_indices(v_proj)])
+
+        v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)
+            if self._within_page_bounds((gutter + x, 0))]
+        h_gutters = [gutter + y for gutter in self._centralize_indices(h_proj)
+            if self._within_page_bounds((0, gutter + x))]
 
         return (v_gutters, h_gutters, x, y)
+    
+    def _within_page_bounds(self, point):
+        # if self.page_boundaries == ():
+        #     return False
+        x, y = point
+        bottom_right = self.page_boundaries[3]
+        max_x, max_y = bottom_right[0], bottom_right[1]
+        if 0 <= y <= max_y and 0 <= x <= max_x:
+            return True
+        return False
 
-    def get_page_bounds(self, page: MatLike) -> list[tuple]:
+    def get_page_boundaries(self, page: MatLike) -> tuple:
         cols, rows = len(page), len(page[0])
         top_left, top_right = (0, 0), (rows, 0)
         bottom_left, bottom_right = (0, cols), (rows, cols)
-        return [(top_left, top_right, bottom_left, bottom_right)]
+        return (top_left, top_right, bottom_left, bottom_right)
 
-    def get_bounded_page(self, bounds: tuple, page: MatLike):
+    def get_bounded_page(self, page: MatLike, bounds: tuple):
         x_values = [bound[0] for bound in bounds]
         y_values = [bound[1] for bound in bounds]
         x = min(x_values)
@@ -81,15 +84,6 @@ class GutterDetector:
         width = max(x_values) - x
         page = page[y: y+height, x: x+width]
         return page, x, y
-
-    def _preprocess_image(self, page: MatLike) -> np.ndarray:
-        # fails unittest
-        blur_page = cv2.GaussianBlur(page, (5, 5), 0)
-        thresh_page = cv2.threshold(blur_page, 0, 255,
-                                    cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-        edge_page = cv2.Canny(thresh_page, 30, 200)
-        return edge_page
-
 
     def _get_projection_indices(self, page: MatLike,
                  direction: Literal['vertical', 'horizontal']) -> NDArray:
@@ -102,6 +96,7 @@ class GutterDetector:
 
         gutter_value = int(np.max(projection))
         gutter_indices = np.where(projection >= gutter_value)
+
         return gutter_indices[0]
 
     def _get_projection(self, direction: Literal['vertical',
@@ -114,6 +109,7 @@ class GutterDetector:
     def _centralize_indices(
             self, indicies: np.ndarray, stepsize: int = 1) -> list:
         centers = []
+
         if indicies.size == 0:
             return centers
         gutter_slices = np.split(

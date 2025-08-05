@@ -4,7 +4,7 @@ import zipfile
 from unittest.mock import MagicMock, patch, mock_open
 from comic_splitter.media_packager import MediaPackager
 
-# NOTE: parent of children that will contain different types of media packagers
+#parent of children that will contain different types of media packagers
 
 class TestMediaPackager:
 

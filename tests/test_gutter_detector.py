@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import pytest
@@ -14,15 +15,15 @@ class TestGutterDetector(unittest.TestCase):
     def test_detector_with_no_panels(self):
         test_page = utils.generate_page([], 50, 50)
         detector = GutterDetector()
-        bounds = detector.get_page_bounds(test_page)
-        v, h, _, _  = detector.detect_gutters(test_page, bounds[0])
+        bounds = detector.get_page_boundaries(test_page)
+        v, h, _, _  = detector.detect_gutters(test_page, bounds)
         assert len(v) == 0 and len(h) == 0
 
     def test_detector_with_one_panel_returns_panel(self):
         test_page = utils.generate_page([((20, 20), (40, 40))], 50, 50)
         detector = GutterDetector()
-        bounds = detector.get_page_bounds(test_page)
-        v, h, _, _  = detector.detect_gutters(test_page, bounds[0])
+        bounds = detector.get_page_boundaries(test_page)
+        v, h, _, _  = detector.detect_gutters(test_page, bounds)
         assert len(v) == 2 and len(h) == 2
 
     def test_detector_with_stacked_panels_detects_horizontal_gutter(self):
@@ -30,9 +31,9 @@ class TestGutterDetector(unittest.TestCase):
         bottom_panel = ((10, 50), (40, 90))
         test_page = utils.generate_page([top_panel, bottom_panel], 100, 50)
         detector = GutterDetector()
-        bounds = detector.get_page_bounds(test_page)
+        bounds = detector.get_page_boundaries(test_page)
         vert_gutters, horiz_gutters, _, _ = detector.detect_gutters(
-            test_page, bounds[0]) 
+            test_page, bounds) 
 
         assert len(vert_gutters) == 2
         assert len(horiz_gutters) == 3
@@ -48,7 +49,7 @@ class TestGutterDetector(unittest.TestCase):
             page_height=100, page_width=50, thickness=1)
         detector = GutterDetector()
         panels = [panel.centroid for panel
-                  in detector.detect_panels(test_page)]
+                  in detector.detect_panel_subsection(test_page)]
         assert len(panels) == len(dummy_panels)
         for detected, expected in zip(panels, dummy_panels):
             assert detected == pytest.approx(expected, abs=1.0)
@@ -62,8 +63,8 @@ class TestGutterDetector(unittest.TestCase):
     def test_page_bounds(self):
         test_page = utils.generate_page([((20, 20), (40, 40))], 50, 50)
         detector = GutterDetector()
-        bounds = detector.get_page_bounds(test_page)
-        assert bounds == [((0,0), (50, 0), (0, 50), (50,50))]
+        bounds = detector.get_page_boundaries(test_page)
+        assert bounds == ((0,0), (50, 0), (0, 50), (50,50))
 
     def test_detector_detects_gutters_in_specified_page_bounds(self):
 
@@ -73,10 +74,10 @@ class TestGutterDetector(unittest.TestCase):
                                         100, 50, thickness=2)
         detector = GutterDetector()
 
-        fullpage_bounds = detector.get_page_bounds(test_page)
-        assert fullpage_bounds == [((0, 0), (50, 0), (0, 100), (50, 100))]
+        fullpage_bounds = detector.get_page_boundaries(test_page)
+        assert fullpage_bounds == ((0, 0), (50, 0), (0, 100), (50, 100))
 
-        vg, hg, _, _ = detector.detect_gutters(test_page, fullpage_bounds[0])
+        vg, hg, _, _ = detector.detect_gutters(test_page, fullpage_bounds)
         assert len(vg) == 2 and len(hg) == 3
 
         intersections = detector.get_intersections(vg, hg)
@@ -142,9 +143,9 @@ class TestGutterDetector(unittest.TestCase):
         )
         detector = GutterDetector()
 
-        bounds = detector.get_page_bounds(multiple_mixed_panels_page)
+        bounds = detector.get_page_boundaries(multiple_mixed_panels_page)
         proj_vert, proj_horiz, _, _ = detector.detect_gutters(
-            multiple_mixed_panels_page, bounds[0])
+            multiple_mixed_panels_page, bounds)
 
         img = utils.draw_lines(multiple_mixed_panels_page,
                          horiz_lines=proj_horiz, vert_lines=proj_vert)
@@ -196,6 +197,30 @@ class TestGutterDetector(unittest.TestCase):
             dummy_intersections)
         assert panels == expected_panels
 
+    def test_gutter_detection_with_panel_missing_border(self):
+        out_of_bounds_panel = ((20, -20), (40, 40))
+        out_of_bounds_page = utils.generate_page(
+            rectangle_coords=[out_of_bounds_panel],
+            page_height=45, page_width = 45) 
+
+        page_boundaries = ((0, 0), (45, 0), (0, 45), (45, 45))
+        detector = GutterDetector()
+        detector.page_boundaries = page_boundaries
+
+        subsections = detector.detect_panel_subsection(out_of_bounds_page)
+        assert len(subsections) == 1
+
+    def test_gutter_detection_with_real_image(self):
+        test_path = os.path.dirname(os.path.abspath(__file__))
+        img_path = os.path.join(test_path, "assets", 'real_gutter_test.jpg')
+        test_img = cv2.imread(img_path)
+
+        detector = GutterDetector()
+        subpanels = detector.detect_panel_subsection(test_img)
+        print('subpanels: ', subpanels)
+
+        assert len(subpanels) == 4
+
 
     @pytest.mark.skip('testing hybrid detection approach before doing slopes')
     def test_detector_with_sloped_gutters_detects_gutterline(self):
@@ -208,7 +233,7 @@ class TestGutterDetector(unittest.TestCase):
             coords, page_height = 500, page_width = 320)
 
         detector = GutterDetector()
-        bounds = detector.get_page_bounds(sloped_panel_page)
+        bounds = detector.get_page_boundaries(sloped_panel_page)
         v, h, _, _ = detector.detect_gutters(sloped_panel_page, bounds[0])
 
         img = utils.draw_lines(sloped_panel_page, horiz_lines=h, vert_lines=v)
@@ -228,5 +253,4 @@ class TestGutterDetector(unittest.TestCase):
     # no gutters
     # inverse colors
     # full spread
-         
 

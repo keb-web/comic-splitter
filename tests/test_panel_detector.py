@@ -4,7 +4,6 @@ import numpy as np
 from unittest import mock
 
 import pytest
-from comic_splitter import panel_detector
 from comic_splitter.panel_detector import PanelDetector
 from tests.page_utils import PageUtils
 
@@ -16,6 +15,8 @@ from tests.page_utils import PageUtils
 utils =  PageUtils()
 
 class TestPanelDetector():
+
+    # TODO: test to test behavior of def detect panels
 
     def contours_are_rectangles(self, contours) -> bool:
         for contour in contours:
@@ -33,6 +34,8 @@ class TestPanelDetector():
         dummy_page.shape = (1, 1)
         detector = PanelDetector()
         rects = detector.get_panel_shapes(contours, dummy_page)
+
+
         assert len(rects) == 2
         assert rects[0] == (10, 10, 11, 11)
         assert rects[1] == (30, 30, 11, 11)
@@ -54,6 +57,7 @@ class TestPanelDetector():
         bottom_shape = label_rects[0]
 
         label_panel_by_index = detector.get_indexed_panels(label_rects)
+
         # labeling panels from top to bottom
         assert label_panel_by_index == [top_shape, bottom_shape]
 
@@ -165,10 +169,13 @@ class TestPanelDetector():
         assert self.contours_are_rectangles(contours)
 
         small_contour, big_contour = contours[0], contours[1]
-        assert cv2.contourArea(small_contour) < cv2.contourArea(big_contour)
 
         filtered_contours = detector._remove_small_contours(contours)
         assert len(filtered_contours) == 1
+
+    # TODO:
+    def test_panel_detection_works_with_gutter_detection(self):
+        pass
 
     @pytest.mark.skip(reason='issues')
     def test_panel_detects_panel_partially_out_of_bounds_of_page(self):

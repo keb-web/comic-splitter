@@ -1,11 +1,43 @@
+from io import BytesIO
+from fastapi import UploadFile
 import numpy as np
 import cv2
 import os
 import matplotlib.pyplot as plt
 from numpy.typing import NDArray
 
+# TODO: add converstion of bytes to UploadFile Type (found in `test_api.py`)
 class PageUtils:
 
+
+    def generate_file_form_data(self, rectangle_coords: list[tuple] = [],
+                                page_height: int = 3035,
+                                page_width: int = 2150,
+                                color: tuple = (0, 0, 0),
+                                thickness: int = 5):
+        page = self.generate_page(rectangle_coords=rectangle_coords,
+                                  page_height=page_height,
+                                  page_width=page_width, color=color,
+                                  thickness=thickness)
+
+        _, encoded_img = cv2.imencode('.png', page)
+        fake_image = BytesIO(encoded_img.tobytes())
+        fake_upload_image = ("files", ("FakeFile.png", fake_image, "image/png"))
+        return fake_upload_image
+
+    def generate_upload_file(self, rectangle_coords: list[tuple] = [],
+                      page_height: int = 3035, page_width: int = 2150,
+                      color: tuple = (0, 0, 0), thickness: int = 5):
+
+        page = self.generate_page(rectangle_coords=rectangle_coords,
+                                  page_height=page_height,
+                                  page_width=page_width, color=color,
+                                  thickness=thickness)
+
+        _, encoded_img = cv2.imencode('.png', page)
+        fake_image = BytesIO(encoded_img.tobytes())
+        return UploadFile(fake_image)
+        
     #TODO: combine both, have to refactor all tests to use ndarrays!
     def generate_page(self, rectangle_coords: list[tuple] = [],
                       page_height: int = 3035, page_width: int = 2150,

@@ -1,4 +1,5 @@
 from typing import Literal
+from cv2.typing import MatLike
 import numpy as np
 import cv2
 from numpy.typing import NDArray
@@ -8,7 +9,7 @@ class Etcher:
 
     def etch(self, page: np.ndarray, rectangles: list,
              label: bool = False, blank: bool = False,
-             mode: Literal["BORDER", "RECTANGLES"] = "RECTANGLES" ) -> NDArray:
+             mode: Literal["BORDER", "RECTANGLES"] = "BORDER" ) -> MatLike:
 
         page = cv2.cvtColor(page, cv2.COLOR_GRAY2BGR)
         height, width, _ = page.shape
@@ -25,7 +26,7 @@ class Etcher:
 
         return canvas
 
-    def draw_label_contours(self, page, rects: list):
+    def draw_label_contours(self, page: MatLike, rects: list):
         for i, r in enumerate(rects):
             x, y, w, h = r
             center_x = x + w // 2

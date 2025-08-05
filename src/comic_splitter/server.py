@@ -23,8 +23,8 @@ app.add_middleware(
 
 VALID_FILE_TYPES = ['jpg', 'png', 'jpeg']
 
-# TODO: add panel size slider to frontend & feed as parameter to split
 
+# TODO: add panel size slider to frontend & feed as parameter to split
 @app.post("/split")
 async def split(mode: Literal['crop', 'etch'] = Form('crop'),
                 blank: bool = Form(False),
@@ -36,9 +36,11 @@ async def split(mode: Literal['crop', 'etch'] = Form('crop'),
                'margins': margins, 'mode': mode}
     splitter = ComicSplitter(files, options)
     file_type = files[0].content_type
+
     panels = await splitter.split()
     encoded_files = [b64encode(p).decode('utf-8') for p in panels]
     return {'image_type': file_type, 'images': encoded_files}
+
 
 def _check_valid_file_extension(files: List[UploadFile]):
     for file in files:

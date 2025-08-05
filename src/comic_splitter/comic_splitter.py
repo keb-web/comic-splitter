@@ -1,12 +1,13 @@
-from typing import Literal
 import cv2
 from cv2.typing import MatLike
 from fastapi import UploadFile
 import numpy as np
 from numpy.typing import NDArray
 
+from comic_splitter.book import Book, Page
 from comic_splitter.cropper import ImageCropper
 from comic_splitter.etcher import Etcher
+from comic_splitter.gutter_detector import GutterDetector
 from comic_splitter.media_packager import MediaPackager
 from comic_splitter.panel_detector import PanelDetector
 
@@ -15,31 +16,43 @@ from comic_splitter.panel_detector import PanelDetector
 #   (options, except for margins, should only work on etch)
 # margins don't work as expected in some cases
 
+
 class ComicSplitter:
     def __init__(self, files: list[UploadFile], options: dict):
         self.files = files
         self.options = options
+        self.book = Book()
         self.cropper = ImageCropper()
         self.etcher = Etcher()
-        self.detector = PanelDetector(margins=options['margins'])
+        self.panel_detector = PanelDetector(margins=options['margins'])
+        self.section_detector = GutterDetector()
 
     async def split(self) -> list:
-        comic_pages, page_panels = await self._extract_images_and_panels()
-        panel_imgs = self.generate_panel_images(self.options['mode'],
-                                                comic_pages, page_panels)
+        await self._extract_panel_pages()
+        panel_imgs = self.generate_panel_images(
+            self.options['mode'], self.book.get_pages())
         return self.encode_panels_to_bytes(panel_imgs)
-        # package zip (optional)
-        # return list of new files (bytes) and cache zip?? (optional)
-        # zip should be exposed to a get request for later retrieval
         
-    async def _extract_images_and_panels(self) -> tuple:
-        comic_pages, page_panels = [], []
-        for file in self.files:
+    async def _extract_panel_pages(self):
+        await self._generate_pages()
+        await self._detect_page_panels()
+
+    async def _generate_pages(self):
+        for page_number, file in enumerate(self.files):
             file_content = await self._decode_bytes_to_matlike_image(file)
-            panels = self.detector.detect_panels(file_content)
-            comic_pages.append(file_content)
-            page_panels.append(panels)
-        return (comic_pages, page_panels)
+            sections = self.section_detector.detect_panel_subsection(
+                file_content)
+            page = Page(content = file_content, sections=sections,
+                        page_number=page_number)
+            self.book.add_page(page)
+
+    async def _detect_page_panels(self):
+        for page in self.book.get_pages():
+            panels = []
+            for section in page.get_sections():
+                detected_panels = self.panel_detector.detect_panels(section)
+                panels.extend(detected_panels)
+            page.set_panels(panels)
 
     async def _decode_bytes_to_matlike_image(self, page) -> MatLike:
         page_contents_bytes = await page.read()
@@ -49,20 +62,31 @@ class ComicSplitter:
             page_content_arr, cv2.IMREAD_GRAYSCALE)
         return page_content_matlike
     
-    def generate_panel_images(self, mode, pages: list[NDArray], panels: list):
+    def generate_panel_images(self, mode, pages: list[Page]) -> list[MatLike]:
         panel_imgs = []
         if mode == 'crop':
-            for i in range(len(self.files)):
-                panel_imgs.extend(self.cropper.crop(
-                    pages[i], panels[i]))
+            for page in pages:
+                # panel_imgs.extend(
+                #     self.cropper.crop(page.content, page.panels)
+                # )
+                # print(page.get_sections())
+                # panel_imgs.extend(
+                #     self.cropper._crop_section(page.get_content(),
+                #                                page.get_sections())
+                # )
+                panel_imgs.extend(page.get_sections())
         elif mode == 'etch':
-            for i in range(len(self.files)):
+            for page in pages:
 
-                # BUG: labeling got broke (horiz panels?)
                 panel_imgs.append(
-                    self.etcher.etch(pages[i], panels[i],
+                    self.etcher.etch(page.content, page.panels,
                                      label=self.options['label'],
-                                     blank=self.options['blank']))
+                                     blank=self.options['blank'])
+                )
+
+        if panel_imgs != []:
+            print(type(panel_imgs[0]))
+
         return panel_imgs
 
     def encode_panels_to_bytes(self, panel_imgs, format: str = '.jpg'):
@@ -75,3 +99,4 @@ class ComicSplitter:
             panel_imgs_as_bytes.append(img_bytes)
 
         return panel_imgs_as_bytes
+
