@@ -6,7 +6,7 @@ from numpy.typing import NDArray
 
 from comic_splitter.book import PageSection
 
-class GutterDetector:
+class SectionDetector:
     '''
     Panel Section Detection by Gutter
     Gutter Detection by Vertical & Horizontal Projection
@@ -20,7 +20,7 @@ class GutterDetector:
                                        value = (255, 255, 255))
         self.page_boundaries = self.get_page_boundaries(page)
 
-    def detect_panel_subsection(self) -> list[PageSection]:
+    def detect_page_sections(self) -> list[PageSection]:
         subpanels = []
         st = [self.page_boundaries]
         while st:

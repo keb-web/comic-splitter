@@ -7,7 +7,7 @@ from numpy.typing import NDArray
 from comic_splitter.book import Book, Page
 from comic_splitter.cropper import ImageCropper
 from comic_splitter.etcher import Etcher
-from comic_splitter.gutter_detector import GutterDetector
+from comic_splitter.gutter_detector import SectionDetector
 from comic_splitter.media_packager import MediaPackager
 from comic_splitter.panel_detector import PanelDetector
 
@@ -39,8 +39,8 @@ class ComicSplitter:
     async def _generate_pages(self):
         for page_number, file in enumerate(self.files):
             file_content = await self._decode_bytes_to_matlike_image(file)
-            gd = GutterDetector(file_content)
-            sections = gd.detect_panel_subsection()
+            gd = SectionDetector(file_content)
+            sections = gd.detect_page_sections()
             page = Page(content = file_content, sections=sections,
                         page_number=page_number)
             self.book.add_page(page)
