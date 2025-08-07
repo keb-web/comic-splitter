@@ -13,6 +13,8 @@ class GutterDetector:
     '''
 
     def __init__(self, page):
+        if page.ndim == 3:
+            page = cv2.cvtColor(page, cv2.COLOR_BGR2GRAY)
         self.page = cv2.copyMakeBorder(page, 4, 4, 4, 4,
                                        cv2.BORDER_CONSTANT,
                                        value = (255, 255, 255))
@@ -26,8 +28,8 @@ class GutterDetector:
             v_gutters, h_gutters, x, y = self.detect_gutters_and_origin(
                 self.page, bounds)
 
-            if self._single_panel(h_gutters, v_gutters):
-                subpanels.append(PageSection(bounds, x, y))
+            if self._single_panel(h_gutters, v_gutters) and not self._section_is_empty(bounds, x, y):
+                    subpanels.append(PageSection(bounds, x, y))
             else:
                 intersections = self.get_intersections(v_gutters, h_gutters)
                 new_bounds = self.get_panel_bounds_from_intersections(
@@ -37,7 +39,19 @@ class GutterDetector:
         return subpanels
 
     def _single_panel(self, h_gutters, v_gutters):
-        return len(v_gutters) <= 2 and len(h_gutters) <= 2
+        return len(v_gutters) == 2 and len(h_gutters) == 2
+
+    def _section_is_empty(self, bounds: tuple, x_offset: int, y_offset: int, empty_value = 255):
+        top_left, top_right, bottom_left, bottom_right = bounds
+        x, y = 0, 1
+
+        min_row = y_offset + min(top_left[y], top_right[y])
+        max_row = y_offset + max(bottom_left[y], bottom_right[y])
+        min_col = x_offset + min(top_left[x], bottom_left[x])
+        max_col = x_offset + max(top_right[x], bottom_right[x])
+
+        region = self.page[min_row:max_row, min_col:max_col]
+        return np.all(region == empty_value)
 
     def detect_gutters_and_origin(self, page: MatLike, bounds: tuple):
         page, x, y = self.get_bounded_page(page, bounds)
@@ -48,7 +62,7 @@ class GutterDetector:
         v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)
             if self._within_page_bounds((gutter + x, 0))]
         h_gutters = [gutter + y for gutter in self._centralize_indices(h_proj)
-            if self._within_page_bounds((0, gutter + x))]
+            if self._within_page_bounds((0, gutter + y))]
 
         return (v_gutters, h_gutters, x, y)
     

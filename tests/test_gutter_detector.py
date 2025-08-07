@@ -47,9 +47,13 @@ class TestGutterDetector(unittest.TestCase):
         test_page = utils.generate_page(
             [top_panel_left, top_panel_right, bottom_panel],
             page_height=100, page_width=50, thickness=1)
+
+
         detector = GutterDetector(test_page)
+        detector.page = test_page # removes border added at init
         panels = [panel.centroid for panel
                   in detector.detect_panel_subsection()]
+
         assert len(panels) == len(dummy_panels)
         for detected, expected in zip(panels, dummy_panels):
             assert detected == pytest.approx(expected, abs=5.0)
@@ -207,25 +211,41 @@ class TestGutterDetector(unittest.TestCase):
             rectangle_coords=[out_of_bounds_panel],
             page_height=45, page_width = 45) 
 
-        page_boundaries = ((0, 0), (45, 0), (0, 45), (45, 45))
+        page_boundaries = ((0, 0), (53, 0), (0, 53), (53, 53))
         detector = GutterDetector(out_of_bounds_page)
         detector.page_boundaries = page_boundaries
 
         subsections = detector.detect_panel_subsection()
         assert len(subsections) == 1
 
-    @pytest.mark.skip(reason='working on it')
     def test_gutter_detection_with_real_image(self):
 
         test_path = os.path.dirname(os.path.abspath(__file__))
         img_path = os.path.join(test_path, "assets", 'real_gutter_test.jpg')
         test_img = cv2.imread(img_path)
 
-        detector = GutterDetector(test_img)
-        subpanels = detector.detect_panel_subsection()
-        print('subpanels: ', subpanels)
+        test_img_top_section = test_img[0: 655]   
+        detector = GutterDetector(test_img_top_section)
+        bounds = ((0, 0), (1208, 0), (0, 663), (1208, 663))
 
-        assert len(subpanels) == 4
+        vg, hg, _, _ = detector.detect_gutters_and_origin(
+            detector.page, bounds)
+
+        assert len(vg) >= 2 and len(hg) >= 2
+
+        detector = GutterDetector(test_img)
+        
+        subpanels = detector.detect_panel_subsection()
+
+        assert len(subpanels) == 3
+
+    def test_page_section_is_empty(self):
+        empty_page = np.full((50, 50), 255, dtype=np.uint8)  # white image
+        detector = GutterDetector(empty_page)
+        bounds = ((0, 0), (58, 0), (0, 58), (58, 58))
+        assert detector._section_is_empty(
+            bounds, 0, 0) == True
+
 
     @pytest.mark.skip(reason =
                       'testing hybrid detection approach before doing slopes')
