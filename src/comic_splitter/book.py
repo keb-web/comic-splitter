@@ -1,5 +1,6 @@
 from cv2.typing import MatLike
 
+
 class PageSection:
 
     def __init__(self, bounds, x, y):
@@ -8,7 +9,7 @@ class PageSection:
         self.top_right = bounds[1]
         self.bottom_left = bounds[2]
         self.bottom_right = bounds[3]
-        self.height = self.bottom_left[1] - self.top_left[1] 
+        self.height = self.bottom_left[1] - self.top_left[1]
         self.width = self.top_right[0] - self.top_left[0]
         self.x_offset = x
         self.y_offset = y
@@ -19,12 +20,13 @@ class PageSection:
         x1, y1 = tl
         x2, y2 = br
         return ((x1+x2)/2, (y1+y2)/2)
-    
-    def set_index(self, index, type = 'lhs'):
+
+    def set_index(self, index, type='lhs'):
         self.index[type] = index
 
     def __repr__(self):
         return f'{self.centroid}'
+
 
 class Page:
     def __init__(
@@ -55,7 +57,7 @@ class Page:
         return content_sections
 
     def set_panels(self, panels: list[tuple]):
-        self.panels = panels # panel coutour coordinates
+        self.panels = panels  # panel coutour coordinates
 
     def add_panels(self, panel: tuple):
         self.panels.append(panel)
@@ -73,4 +75,3 @@ class Book:
 
     def add_page(self, page: Page):
         self.pages.append(page)
-

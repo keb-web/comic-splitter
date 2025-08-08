@@ -5,7 +5,7 @@ from base64 import b64encode
 
 from comic_splitter.comic_splitter import ComicSplitter
 
-# rmr to compress image 
+# rmr to compress image
 
 app = FastAPI()
 

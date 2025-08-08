@@ -1,18 +1,20 @@
 import os
-import cv2
-import numpy as np
 from unittest import mock
 
+import cv2
+import numpy as np
 import pytest
+
 from comic_splitter.panel_detector import PanelDetector
 from tests.page_utils import PageUtils
 
-# TODO: 
+# TODO:
 # - rethink how to best interface with this class
 # - make PanelDetector use wrapper for cv2
 # - finish last test cases
 
-utils =  PageUtils()
+utils = PageUtils()
+
 
 class TestPanelDetector():
 
@@ -35,19 +37,18 @@ class TestPanelDetector():
         detector = PanelDetector()
         rects = detector.get_panel_shapes(contours, dummy_page)
 
-
         assert len(rects) == 2
         assert rects[0] == (10, 10, 11, 11)
         assert rects[1] == (30, 30, 11, 11)
 
     def test_labeling_page_with_two_stacked_panels(self):
         top_panel = ((150, 100), (2020, 1444))
-        bottom_panel =  ((150, 1520), (2020, 2911))
+        bottom_panel = ((150, 1520), (2020, 2911))
         two_stacked_panels_page = utils.generate_page(
             rectangle_coords=[top_panel, bottom_panel])
 
         detector = PanelDetector()
-        contours = detector.get_panel_contours(two_stacked_panels_page) 
+        contours = detector.get_panel_contours(two_stacked_panels_page)
         assert self.contours_are_rectangles(contours)
 
         label_rects = detector.get_panel_shapes(contours,
@@ -86,7 +87,7 @@ class TestPanelDetector():
         # labeling panels from right to left
         label_panel_by_index = detector.get_indexed_panels(label_rects)
         assert label_panel_by_index == [right_shape, middle_shape, left_shape]
-    
+
     def test_labeling_page_with_multiple_panels(self):
         multiple_mixed_panels_page = utils.generate_page(
             rectangle_coords=[
@@ -118,8 +119,8 @@ class TestPanelDetector():
                               (99, 1611, 2003, 1328)]
 
     def test_labeling_page_with_multiple_nested_panels(self):
-        outer_panel = ((100,100), (1200, 2900))
-        slight_outer_panel = ((95,95), (1205, 2905))
+        outer_panel = ((100, 100), (1200, 2900))
+        slight_outer_panel = ((95, 95), (1205, 2905))
         inner_panel_1 = ((200, 200), (1100, 1400))   # Top-left quarter
         panel_1_child = ((250, 250), (1000, 1200))   # inside inner_panel_1
         inner_panel_2 = ((200, 1500), (1100, 2700))  # Bottom-right
@@ -150,25 +151,23 @@ class TestPanelDetector():
     def test_panel_detection_with_margin(self):
         test_page = utils.generate_page(
             rectangle_coords=[((50, 50), (200, 200))],
-            page_height = 400, page_width = 400
+            page_height=400, page_width=400
         )
         detector = PanelDetector(margins=25)
         contours = detector.get_panel_contours(page=test_page)
         shapes = detector.get_panel_shapes(contours, test_page)
         panel = detector.get_indexed_panels(shapes)
-        assert panel  == [(24, 21, 205, 208)]
+        assert panel == [(24, 21, 205, 208)]
 
     def test_panel_detection_removes_small_detected_panels(self):
         big_panel = ((150, 100), (2000, 2750))
-        small_panel =  ((2100, 2850), (2000, 2900))
+        small_panel = ((2100, 2850), (2000, 2900))
         two_stacked_panels_page = utils.generate_page(
             rectangle_coords=[big_panel, small_panel])
 
         detector = PanelDetector(min_panel_area=5701)
-        contours = detector.get_panel_contours(two_stacked_panels_page) 
+        contours = detector.get_panel_contours(two_stacked_panels_page)
         assert self.contours_are_rectangles(contours)
-
-        small_contour, big_contour = contours[0], contours[1]
 
         filtered_contours = detector._remove_small_contours(contours)
         assert len(filtered_contours) == 1
@@ -183,7 +182,7 @@ class TestPanelDetector():
         out_of_bounds_page = utils.generate_page(
             rectangle_coords=[out_of_bounds_panel])
         detector = PanelDetector()
-        contours = detector.get_panel_contours(out_of_bounds_page) 
+        contours = detector.get_panel_contours(out_of_bounds_page)
         assert self.contours_are_rectangles(contours)
         label_rects = detector.get_panel_shapes(contours, out_of_bounds_page)
         # BUG: outermost contour/rectangle not used
@@ -205,7 +204,7 @@ class TestPanelDetector():
         # vu.save_image(dilate_page)
 
         detector = PanelDetector()
-        contours = detector.get_panel_contours(page_with_gap) 
+        contours = detector.get_panel_contours(page_with_gap)
         utils.draw_labels(page_with_gap, contours)
 
         assert self.contours_are_rectangles(contours)
@@ -234,7 +233,7 @@ class TestPanelDetector():
         page_path = os.path.join(test_dir, 'samples', 'book_page.jpg')
         dummy_page = cv2.imread(page_path, cv2.IMREAD_GRAYSCALE)
 
-        kernel = np.ones((15, 15),np.uint8)
+        kernel = np.ones((15, 15), np.uint8)
 
         opened = cv2.morphologyEx(dummy_page, cv2.MORPH_OPEN, kernel)
         # opened = cv2.morphologyEx(dummy_page, cv2.MORPH_CLOSE, kernel)
@@ -245,7 +244,7 @@ class TestPanelDetector():
         # blur_page = cv2.GaussianBlur(dilate_page, (5, 5), 0)
 
         # detector = PanelDetector()
-        # contours = detector.get_panel_contours(dummy_page) 
+        # contours = detector.get_panel_contours(dummy_page)
         # vu.draw_labels(dummy_page, contours)
 
     # FIX: most problems are fixed if
@@ -262,4 +261,3 @@ class TestPanelDetector():
     # def test_labeling_inverted_panels():
     # def margin moves contour out of bounds test():
     # def fallback test, if no obvious panel is found, return whole page
-

@@ -4,7 +4,8 @@ import zipfile
 from unittest.mock import MagicMock, patch, mock_open
 from comic_splitter.media_packager import MediaPackager
 
-#parent of children that will contain different types of media packagers
+# parent of children that will contain different types of media packagers
+
 
 class TestMediaPackager:
 
@@ -44,7 +45,7 @@ class TestMediaPackager:
         mock_bytes_io = MagicMock(spec=io.BytesIO)
         packager = MediaPackager([])
         with patch.object(packager, '_zip', return_value=mock_bytes_io), \
-            patch('builtins.open', mock_open()) as mock_file:
+             patch('builtins.open', mock_open()) as mock_file:
             packager.download()
             mock_file.assert_called_once_with(
                 f'{packager.download_path}', 'wb')

@@ -1,23 +1,23 @@
 import cv2
+import numpy as np
 from cv2.typing import MatLike
 from fastapi import UploadFile
-import numpy as np
-from numpy.typing import NDArray
 
 from comic_splitter.book import Book, Page
 from comic_splitter.cropper import ImageCropper
 from comic_splitter.etcher import Etcher
-from comic_splitter.gutter_detector import SectionDetector
 from comic_splitter.media_packager import MediaPackager
 from comic_splitter.panel_detector import PanelDetector
+from comic_splitter.section_detector import SectionDetector
 
-# BUG: 
-# apply options before cropping/etching 
+# BUG:
+# apply options before cropping/etching
 #   (options, except for margins, should only work on etch)
 # margins don't work as expected in some cases
 
 
 class ComicSplitter:
+
     def __init__(self, files: list[UploadFile], options: dict):
         self.files = files
         self.options = options
@@ -31,7 +31,7 @@ class ComicSplitter:
         panel_imgs = self.generate_panel_images(
             self.options['mode'], self.book.get_pages())
         return self.encode_panels_to_bytes(panel_imgs)
-        
+
     async def _extract_panel_pages(self):
         await self._generate_pages()
         await self._detect_page_panels()
@@ -39,9 +39,9 @@ class ComicSplitter:
     async def _generate_pages(self):
         for page_number, file in enumerate(self.files):
             file_content = await self._decode_bytes_to_matlike_image(file)
-            gd = SectionDetector(file_content)
-            sections = gd.detect_page_sections()
-            page = Page(content = file_content, sections=sections,
+            sd = SectionDetector(file_content)
+            sections = sd.detect_page_sections()
+            page = Page(content=file_content, sections=sections,
                         page_number=page_number)
             self.book.add_page(page)
 
@@ -60,7 +60,7 @@ class ComicSplitter:
         page_content_matlike = cv2.imdecode(
             page_content_arr, cv2.IMREAD_GRAYSCALE)
         return page_content_matlike
-    
+
     def generate_panel_images(self, mode, pages: list[Page]) -> list[MatLike]:
         panel_imgs = []
         if mode == 'crop':
@@ -98,4 +98,3 @@ class ComicSplitter:
             panel_imgs_as_bytes.append(img_bytes)
 
         return panel_imgs_as_bytes
-

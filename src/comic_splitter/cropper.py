@@ -1,10 +1,7 @@
-
 import numpy as np
 
-from comic_splitter.book import PageSection
 
 class ImageCropper:
-
     def crop(self, image: np.ndarray,
              crop_queue: list[tuple]) -> list:
 
@@ -17,9 +14,7 @@ class ImageCropper:
 
     # TODO: delete
     def _crop_section(self, image: np.ndarray,
-             crop_queue: list) -> list:
-        print(crop_queue)
-
+                      crop_queue: list) -> list:
         cropped_images = []
         for section in crop_queue:
             x, y = section.x_offset, section.y_offset

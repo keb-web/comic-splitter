@@ -2,18 +2,18 @@ from typing import Literal
 from cv2.typing import MatLike
 import numpy as np
 import cv2
-from numpy.typing import NDArray
 
 
 class Etcher:
 
     def etch(self, page: np.ndarray, rectangles: list,
              label: bool = False, blank: bool = False,
-             mode: Literal["BORDER", "RECTANGLES"] = "BORDER" ) -> MatLike:
+             mode: Literal["BORDER", "RECTANGLES"] = "BORDER") -> MatLike:
 
         page = cv2.cvtColor(page, cv2.COLOR_GRAY2BGR)
         height, width, _ = page.shape
-        canvas = np.ones((height,width,3), np.uint8) if blank else page.copy()
+        canvas = np.ones(
+            (height, width, 3), np.uint8) if blank else page.copy()
 
         for (x, y, w, h) in rectangles:
             if mode == 'RECTANGLES':
@@ -36,4 +36,4 @@ class Etcher:
                 page, str(i + 1),
                 (center_x, center_y),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                1, (0,0,255), 2)
+                1, (0, 0, 255), 2)

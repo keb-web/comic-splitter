@@ -4,12 +4,11 @@ import cv2
 from cv2.typing import MatLike
 import numpy as np
 
-# BUG: panel detection for nested panels
 
 class PanelDetector:
+    ''' Detect panels using computer vision contour detection
     '''
-    Panel Detection by contours
-    '''
+
     def __init__(self, margins: int = 0, min_panel_area: int = -1):
         self.margins = margins
         self.min_panel_area = min_panel_area
@@ -34,10 +33,7 @@ class PanelDetector:
         contours, _ = cv2.findContours(
             edge_page, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        ## add more contour checking here
-
-
-        ## 
+        # TODO: add more contour checking here
 
         contours = self._remove_small_contours(contours)
 
@@ -91,7 +87,7 @@ class PanelDetector:
             y = max(y - self.margins, 0)
             width = min(width + self.margins * 2, img_width - x)
             height = min(height + self.margins * 2, img_height - y)
-        return((x, y, width, height))
+        return ((x, y, width, height))
 
     def get_indexed_panels(self, panel_rects: list[tuple]) -> list[tuple]:
         # TODO: integrate variance handling
@@ -103,7 +99,7 @@ class PanelDetector:
             panel_height = panel[1]
             panels_by_y[panel_height].append(panel)
         for panels in panels_by_y.values():
-            panels_by_x = sorted(panels, key= lambda x: x[0])
+            panels_by_x = sorted(panels, key = lambda x: x[0])
             for x_panel in panels_by_x:
                 indexed_panels.insert(0, x_panel)
         return indexed_panels

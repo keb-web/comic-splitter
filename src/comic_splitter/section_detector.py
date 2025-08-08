@@ -1,15 +1,16 @@
 from typing import Literal
+
 import cv2
-from cv2.typing import MatLike
 import numpy as np
+from cv2.typing import MatLike
 from numpy.typing import NDArray
 
 from comic_splitter.book import PageSection
 
+
 class SectionDetector:
-    '''
-    Panel Section Detection by Gutter
-    Gutter Detection by Vertical & Horizontal Projection
+    ''' Detect PageSections by intersection of Vertical and Horizontal Gutters
+        using horizontal and vertical projections
     '''
 
     def __init__(self, page):
@@ -17,7 +18,7 @@ class SectionDetector:
             page = cv2.cvtColor(page, cv2.COLOR_BGR2GRAY)
         self.page = cv2.copyMakeBorder(page, 4, 4, 4, 4,
                                        cv2.BORDER_CONSTANT,
-                                       value = (255, 255, 255))
+                                       value=(255, 255, 255))
         self.page_boundaries = self.get_page_boundaries(page)
 
     def detect_page_sections(self) -> list[PageSection]:
@@ -28,8 +29,9 @@ class SectionDetector:
             v_gutters, h_gutters, x, y = self.detect_gutters_and_origin(
                 self.page, bounds)
 
-            if self._single_panel(h_gutters, v_gutters) and not self._section_is_empty(bounds, x, y):
-                    subpanels.append(PageSection(bounds, x, y))
+            if (self._single_panel(h_gutters, v_gutters)
+                    and not self._section_is_empty(bounds, x, y)):
+                subpanels.append(PageSection(bounds, x, y))
             else:
                 intersections = self.get_intersections(v_gutters, h_gutters)
                 new_bounds = self.get_panel_bounds_from_intersections(
@@ -41,7 +43,8 @@ class SectionDetector:
     def _single_panel(self, h_gutters, v_gutters):
         return len(v_gutters) == 2 and len(h_gutters) == 2
 
-    def _section_is_empty(self, bounds: tuple, x_offset: int, y_offset: int, empty_value = 255):
+    def _section_is_empty(self, bounds: tuple, x_offset: int,
+                          y_offset: int, empty_value=255):
         top_left, top_right, bottom_left, bottom_right = bounds
         x, y = 0, 1
 
@@ -60,12 +63,12 @@ class SectionDetector:
         h_proj = self._get_projection_indices(page, 'horizontal')
 
         v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)
-            if self._within_page_bounds((gutter + x, 0))]
+                     if self._within_page_bounds((gutter + x, 0))]
         h_gutters = [gutter + y for gutter in self._centralize_indices(h_proj)
-            if self._within_page_bounds((0, gutter + y))]
+                     if self._within_page_bounds((0, gutter + y))]
 
         return (v_gutters, h_gutters, x, y)
-    
+
     def _within_page_bounds(self, point):
         x, y = point
         bottom_right = self.page_boundaries[3]
@@ -90,14 +93,16 @@ class SectionDetector:
         page = page[y: y+height, x: x+width]
         return page, x, y
 
-    def _get_projection_indices(self, page: MatLike,
-                 direction: Literal['vertical', 'horizontal']) -> NDArray:
+    def _get_projection_indices(
+            self, page: MatLike,
+            direction: Literal['vertical', 'horizontal']) -> NDArray:
+
         projection = self._get_projection(direction, page)
 
         # check for single panel page
         uniq = np.unique_counts(projection)
         if len(uniq.counts) == 1 and uniq.counts == len(page):
-            return np.empty((0,0))
+            return np.empty((0, 0))
 
         gutter_value = int(np.max(projection))
         gutter_indices = np.where(projection >= gutter_value)
@@ -124,9 +129,9 @@ class SectionDetector:
             center = start + int((np.max(slice) - np.min(slice)) / 2)
             centers.append(center.tolist())
         return centers
-    
+
     def get_intersections(self, v_gutters: list,
-                           h_gutters: list ) -> list[tuple]:
+                          h_gutters: list) -> list[tuple]:
         ans = []
         for v in v_gutters:
             for h in h_gutters:
@@ -138,13 +143,13 @@ class SectionDetector:
         y = sorted(set([coord[1] for coord in intersections]))
         points = set(intersections)
         panel_bounds = []
-        
+
         for r in range(len(y) - 1):
             panel = []
             for c in range(len(x) - 1):
                 y1, y2 = y[r], y[r+1]
                 x1, x2 = x[c], x[c+1]
-        
+
                 panel = [
                     (x1, y1), (x2, y1),
                     (x1, y2), (x2, y2)
@@ -154,5 +159,3 @@ class SectionDetector:
                     panel_bounds.append(tuple(panel))
 
         return panel_bounds
-
-

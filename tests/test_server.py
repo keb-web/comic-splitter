@@ -1,15 +1,14 @@
 from io import BytesIO
 
 import pytest
-import cv2
 from fastapi.testclient import TestClient
-import numpy as np
 
 from comic_splitter.server import app
 from tests.page_utils import PageUtils
 
 client = TestClient(app)
 utils = PageUtils()
+
 
 class TestServer:
     def test_invalid_filetype_posted_returns_error(self):
@@ -26,7 +25,7 @@ class TestServer:
     @pytest.mark.skip(reason="fix later")
     def test_valid_filetype_posted_returns_split_panels_as_pages(self):
         top_panel = ((150, 100), (2020, 1444))
-        bottom_panel =  ((150, 1520), (2020, 2911))
+        bottom_panel = ((150, 1520), (2020, 2911))
         files = [utils.generate_file_form_data(
             rectangle_coords=[top_panel, bottom_panel])]
         data = {'mode': 'crop', 'label': False, 'blank': False, 'margin': 0}
@@ -38,7 +37,7 @@ class TestServer:
 
     def test_valid_filetype_posted_returns_etched_panels_as_pages(self):
         top_panel = ((150, 100), (2020, 1444))
-        bottom_panel =  ((150, 1520), (2020, 2911))
+        bottom_panel = ((150, 1520), (2020, 2911))
         files = [utils.generate_file_form_data(
             rectangle_coords=[top_panel, bottom_panel])]
         dummy_data = {'mode': 'etch', 'label': False,
