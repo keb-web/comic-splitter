@@ -1,8 +1,9 @@
 from collections import defaultdict
 from typing import Sequence
+
 import cv2
-from cv2.typing import MatLike
 import numpy as np
+from cv2.typing import MatLike
 
 
 class PanelDetector:
@@ -60,7 +61,7 @@ class PanelDetector:
             if area >= self.min_panel_area:
                 big_contours.append(contour)
         return big_contours
-    
+
     def _approximate_contours(self,
                               contours: Sequence[MatLike]) -> list[np.ndarray]:
         approximate_contours = []
@@ -99,8 +100,7 @@ class PanelDetector:
             panel_height = panel[1]
             panels_by_y[panel_height].append(panel)
         for panels in panels_by_y.values():
-            panels_by_x = sorted(panels, key = lambda x: x[0])
+            panels_by_x = sorted(panels, key=lambda x: x[0])
             for x_panel in panels_by_x:
                 indexed_panels.insert(0, x_panel)
         return indexed_panels
-

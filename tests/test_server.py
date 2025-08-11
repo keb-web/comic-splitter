@@ -1,6 +1,5 @@
 from io import BytesIO
 
-from _pytest.runner import pytest_sessionfinish
 import pytest
 from fastapi.testclient import TestClient
 

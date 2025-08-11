@@ -1,6 +1,5 @@
 import os
 import unittest
-from unittest.mock import MagicMock
 
 import cv2
 import numpy as np
@@ -278,35 +277,35 @@ class TestSectionDetector(unittest.TestCase):
         with self.assertRaisesRegex(Exception, 'image without padding'):
             SectionDetector(unpadded_image)
 
-    @pytest.mark.skip(reason='testing hybrid detection approach first')
-    def test_detector_with_sloped_gutters_detects_gutterline(self):
-        coords = np.array([
-            [20, 20], [20, 50], [40, 20],         # triangle1
-            [20, 480], [140, 20], [280, 480],     # triangle2
-            [160, 20], [220, 20], [300, 480]       # triangle3
-        ], np.int32)
-        sloped_panel_page = utils.generate_polygonal_page(
-            coords, page_height=500, page_width=320)
+    # @pytest.mark.skip(reason='testing hybrid detection approach first')
+    # def test_detector_with_sloped_gutters_detects_gutterline(self):
+        # coords = np.array([
+        #     [20, 20], [20, 50], [40, 20],         # triangle1
+        #     [20, 480], [140, 20], [280, 480],     # triangle2
+        #     [160, 20], [220, 20], [300, 480]       # triangle3
+        # ], np.int32)
+        # sloped_panel_page = utils.generate_polygonal_page(
+        #     coords, page_height=500, page_width=320)
+        #
+        # detector = SectionDetector(sloped_panel_page)
+        # bounds = detector.get_page_boundaries(sloped_panel_page)
+        # v, h, _, _ = detector.detect_gutters_and_origin(
+        #     sloped_panel_page, bounds[0])
+        #
+        # img = utils.draw_lines(
+        # sloped_panel_page, horiz_lines=h, vert_lines=v)
+        # utils.save_image(img)
+        #
+        # assert len(h) == 2
+        # assert len(v) == 1
 
-        detector = SectionDetector(sloped_panel_page)
-        bounds = detector.get_page_boundaries(sloped_panel_page)
-        v, h, _, _ = detector.detect_gutters_and_origin(
-            sloped_panel_page, bounds[0])
-
-        img = utils.draw_lines(sloped_panel_page, horiz_lines=h, vert_lines=v)
-        utils.save_image(img)
-
-        assert len(h) == 2
-        assert len(v) == 1
-
-    @pytest.mark.skip(reason='need to add slope attrib to gutter')
-    def test_get_intersection_between_sloped_vert_horiz_gutters(self):
-        pass
-
-    # nested
-    # out of bounds
-    # polygonal
-    # gaps
-    # no gutters
-    # inverse colors
-    # full spread
+        # @pytest.mark.skip(reason='need to add slope attrib to gutter')
+        # def test_get_intersection_between_sloped_vert_horiz_gutters(self):
+        #     pass
+        # nested
+        # out of bounds
+        # polygonal
+        # gaps
+        # no gutters
+        # inverse colors
+        # full spread

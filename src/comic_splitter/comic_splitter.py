@@ -6,7 +6,6 @@ from fastapi import UploadFile
 from comic_splitter.book import Book, Page
 from comic_splitter.cropper import ImageCropper
 from comic_splitter.etcher import Etcher
-from comic_splitter.media_packager import MediaPackager
 from comic_splitter.panel_detector import PanelDetector
 from comic_splitter.section_detector import SectionDetector
 
