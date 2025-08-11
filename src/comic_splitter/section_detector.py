@@ -14,12 +14,32 @@ class SectionDetector:
     '''
 
     def __init__(self, page):
-        if page.ndim == 3:
-            page = cv2.cvtColor(page, cv2.COLOR_BGR2GRAY)
-        self.page = cv2.copyMakeBorder(page, 4, 4, 4, 4,
-                                       cv2.BORDER_CONSTANT,
-                                       value=(255, 255, 255))
+        self._check_page(page)
+        self.page = page
         self.page_boundaries = self.get_page_boundaries(page)
+
+    def _check_page(self, page: MatLike):
+        if len(page.shape) == 3:
+            _, _, channels = page.shape
+        else:
+            channels = 1
+
+        if channels > 1:
+            raise Exception('Attempt detection of image with >1 channels')
+        elif self._border_exists(page) is False:
+            raise Exception('Attempt detection of image without padding')
+
+    def _border_exists(self, page: MatLike, pixel_value: int = 255):
+        h, w = page.shape
+        first_column = (page[0: h, 0] == pixel_value)
+        last_column = (page[0: h, w-1] == pixel_value)
+        first_row = (page[0] == pixel_value)
+        last_row = (page[-1] == pixel_value)
+        page_borders = (first_column, last_column, first_row, last_row)
+        padding = np.concatenate(page_borders)
+        if np.all(padding):
+            return True
+        return False
 
     def detect_page_sections(self) -> list[PageSection]:
         subpanels = []
