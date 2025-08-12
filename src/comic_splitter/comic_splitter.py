@@ -6,7 +6,6 @@ from fastapi import UploadFile
 from comic_splitter.book import Book, Page
 from comic_splitter.cropper import ImageCropper
 from comic_splitter.etcher import Etcher
-from comic_splitter.media_packager import MediaPackager
 from comic_splitter.panel_detector import PanelDetector
 from comic_splitter.section_detector import SectionDetector
 
@@ -39,9 +38,14 @@ class ComicSplitter:
     async def _generate_pages(self):
         for page_number, file in enumerate(self.files):
             file_content = await self._decode_bytes_to_matlike_image(file)
+            gray_file_content = cv2.cvtColor(file_content, cv2.COLOR_BGR2GRAY)
+            padded_file_content = cv2.copyMakeBorder(gray_file_content,
+                                                     4, 4, 4, 4,
+                                                     cv2.BORDER_CONSTANT,
+                                                     value=(255, 255, 255))
             sd = SectionDetector(file_content)
             sections = sd.detect_page_sections()
-            page = Page(content=file_content, sections=sections,
+            page = Page(content=padded_file_content, sections=sections,
                         page_number=page_number)
             self.book.add_page(page)
 

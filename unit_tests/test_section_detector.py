@@ -4,9 +4,10 @@ import unittest
 import cv2
 import numpy as np
 import pytest
+from cv2.typing import MatLike
 
 from comic_splitter.section_detector import SectionDetector
-from tests.page_utils import PageUtils
+from .page_utils import PageUtils
 
 utils = PageUtils()
 
@@ -107,15 +108,16 @@ class TestSectionDetector(unittest.TestCase):
         cv2.line(test_page,
                  pt1=(0, 25), pt2=(50, 25), color=black, thickness=1)
 
-        detector = SectionDetector(test_page)
+        detector = SectionDetector(np.full((5, 5), 255, dtype=np.uint8))
+
         vert_gutter_indices = detector._get_projection_indices(
             test_page, 'vertical')
         horiz_gutter_indices = detector._get_projection_indices(
             test_page, 'horizontal')
 
         assert vert_gutter_indices.tolist() == []
-        assert horiz_gutter_indices.tolist() == [
-            i for i in range(height) if i != 25]
+        assert horiz_gutter_indices.tolist() == [i for i in range(height)
+                                                 if i != 25]
 
     def test_detector_projects_nothing_given_empty_page(self):
         width, height = 50, 50
@@ -132,8 +134,10 @@ class TestSectionDetector(unittest.TestCase):
         gutter_indices = np.arange(0, 50)
         gutter_indices = np.delete(gutter_indices, 25)
         gutter_indices = np.delete(gutter_indices, 5)
-        section_detector = SectionDetector(np.empty((1, 1)))
+        empty_image = np.full((5, 5), 255, dtype=np.uint8)
+        section_detector = SectionDetector(empty_image)
         central_indices = section_detector._centralize_indices(gutter_indices)
+        print(central_indices)
         assert central_indices == [2, 15, 37]
 
     def test_labeling_page_with_multiple_panels(self):
@@ -162,7 +166,7 @@ class TestSectionDetector(unittest.TestCase):
 
     def test_get_no_intersection_between_nonexistent_gutters(self):
         vert, horiz = [], []
-        detector = SectionDetector(np.empty((1, 1)))
+        detector = SectionDetector(np.full((5, 5), 255, dtype=np.uint8))
         intersections = detector.get_intersections(vert, horiz)
         assert len(intersections) == 0
         assert intersections == []
@@ -174,7 +178,7 @@ class TestSectionDetector(unittest.TestCase):
         intersections = [(48, 48), (2126, 48), (48, 1565),
                          (2126, 1565), (48, 2986), (2126, 2986)]
 
-        empty_page = np.empty((1, 1))
+        empty_page = np.full((5, 5), 255, dtype=np.uint8)
         detector = SectionDetector(empty_page)
         dummy_intersections = detector.get_intersections(vert, horiz)
 
@@ -182,7 +186,7 @@ class TestSectionDetector(unittest.TestCase):
         self.assertCountEqual(dummy_intersections, intersections)
 
     def test_get_panels_from_intersections(self):
-        empty_page = np.empty((1, 1))
+        empty_page = np.full((5, 5), 255, dtype=np.uint8)
         detector = SectionDetector(empty_page)
         assert detector.get_panel_bounds_from_intersections([]) == []
 
@@ -205,11 +209,22 @@ class TestSectionDetector(unittest.TestCase):
             dummy_intersections)
         assert panels == expected_panels
 
+    def pad_and_convert_greyscale_image(self, image: MatLike):
+        if len(image.shape) == 3:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+        image = cv2.copyMakeBorder(image, 4, 4, 4, 4,
+                                   cv2.BORDER_CONSTANT,
+                                   value=(255, 255, 255))
+        return image
+
     def test_gutter_detection_with_panel_missing_border(self):
         out_of_bounds_panel = ((20, -20), (40, 40))
         out_of_bounds_page = utils.generate_page(
             rectangle_coords=[out_of_bounds_panel],
             page_height=45, page_width=45)
+        out_of_bounds_page = self.pad_and_convert_greyscale_image(
+            out_of_bounds_page)
 
         page_boundaries = ((0, 0), (53, 0), (0, 53), (53, 53))
         detector = SectionDetector(out_of_bounds_page)
@@ -225,7 +240,9 @@ class TestSectionDetector(unittest.TestCase):
         test_img = cv2.imread(img_path)
 
         test_img_top_section = test_img[0: 655]
-        detector = SectionDetector(test_img_top_section)
+
+        detector = SectionDetector(
+            self.pad_and_convert_greyscale_image(test_img_top_section))
         bounds = ((0, 0), (1208, 0), (0, 663), (1208, 663))
 
         vg, hg, _, _ = detector.detect_gutters_and_origin(
@@ -233,7 +250,8 @@ class TestSectionDetector(unittest.TestCase):
 
         assert len(vg) >= 2 and len(hg) >= 2
 
-        detector = SectionDetector(test_img)
+        detector = SectionDetector(
+            self.pad_and_convert_greyscale_image(test_img))
         subpanels = detector.detect_page_sections()
 
         img = utils.draw_page_sections(detector.page, subpanels)
@@ -245,37 +263,49 @@ class TestSectionDetector(unittest.TestCase):
         empty_page = np.full((50, 50), 255, dtype=np.uint8)  # white image
         detector = SectionDetector(empty_page)
         bounds = ((0, 0), (58, 0), (0, 58), (58, 58))
-        assert detector._section_is_empty(bounds, 0, 0) is True
+        if not detector._section_is_empty(bounds, 0, 0):
+            assert False
 
-    @pytest.mark.skip(reason='testing hybrid detection approach first')
-    def test_detector_with_sloped_gutters_detects_gutterline(self):
-        coords = np.array([
-            [20, 20], [20, 50], [40, 20],         # triangle1
-            [20, 480], [140, 20], [280, 480],     # triangle2
-            [160, 20], [220, 20], [300, 480]       # triangle3
-        ], np.int32)
-        sloped_panel_page = utils.generate_polygonal_page(
-            coords, page_height=500, page_width=320)
+    def test_page_section_checks_valid_page(self):
+        height, width, channels = 50, 50, 3
+        color_image = np.ones((height, width, channels), dtype=np.uint8)
+        unpadded_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
 
-        detector = SectionDetector(sloped_panel_page)
-        bounds = detector.get_page_boundaries(sloped_panel_page)
-        v, h, _, _ = detector.detect_gutters_and_origin(
-            sloped_panel_page, bounds[0])
+        with self.assertRaisesRegex(Exception, 'image with >1 channels'):
+            SectionDetector(color_image)
 
-        img = utils.draw_lines(sloped_panel_page, horiz_lines=h, vert_lines=v)
-        utils.save_image(img)
+        with self.assertRaisesRegex(Exception, 'image without padding'):
+            SectionDetector(unpadded_image)
 
-        assert len(h) == 2
-        assert len(v) == 1
+    # @pytest.mark.skip(reason='testing hybrid detection approach first')
+    # def test_detector_with_sloped_gutters_detects_gutterline(self):
+        # coords = np.array([
+        #     [20, 20], [20, 50], [40, 20],         # triangle1
+        #     [20, 480], [140, 20], [280, 480],     # triangle2
+        #     [160, 20], [220, 20], [300, 480]       # triangle3
+        # ], np.int32)
+        # sloped_panel_page = utils.generate_polygonal_page(
+        #     coords, page_height=500, page_width=320)
+        #
+        # detector = SectionDetector(sloped_panel_page)
+        # bounds = detector.get_page_boundaries(sloped_panel_page)
+        # v, h, _, _ = detector.detect_gutters_and_origin(
+        #     sloped_panel_page, bounds[0])
+        #
+        # img = utils.draw_lines(
+        # sloped_panel_page, horiz_lines=h, vert_lines=v)
+        # utils.save_image(img)
+        #
+        # assert len(h) == 2
+        # assert len(v) == 1
 
-    @pytest.mark.skip(reason='need to add slope attrib to gutter')
-    def test_get_intersection_between_sloped_vert_horiz_gutters(self):
-        pass
-
-    # nested
-    # out of bounds
-    # polygonal
-    # gaps
-    # no gutters
-    # inverse colors
-    # full spread
+        # @pytest.mark.skip(reason='need to add slope attrib to gutter')
+        # def test_get_intersection_between_sloped_vert_horiz_gutters(self):
+        #     pass
+        # nested
+        # out of bounds
+        # polygonal
+        # gaps
+        # no gutters
+        # inverse colors
+        # full spread

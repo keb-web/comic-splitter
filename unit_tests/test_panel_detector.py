@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from comic_splitter.panel_detector import PanelDetector
-from tests.page_utils import PageUtils
+from .page_utils import PageUtils
 
 # TODO:
 # - rethink how to best interface with this class
