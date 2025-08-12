@@ -1,7 +1,7 @@
 from comic_splitter.comic_splitter import ComicSplitter
 import pytest
 
-from tests.page_utils import PageUtils
+from .page_utils import PageUtils
 
 utils = PageUtils()
 

@@ -7,7 +7,7 @@ import pytest
 from cv2.typing import MatLike
 
 from comic_splitter.section_detector import SectionDetector
-from tests.page_utils import PageUtils
+from .page_utils import PageUtils
 
 utils = PageUtils()
 

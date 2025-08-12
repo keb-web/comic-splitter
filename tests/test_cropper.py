@@ -1,8 +1,7 @@
 import numpy as np
 import pytest
 from comic_splitter.cropper import ImageCropper
-from tests.page_utils import PageUtils
-
+from .page_utils import PageUtils
 
 class TestCropper:
 
