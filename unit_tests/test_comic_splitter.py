@@ -17,7 +17,6 @@ class TestComicSplitter:
         await cs._get_book_data_from_bytes()
         assert cs.book.get_pages() == []
 
-
     @pytest.mark.skip(reason="testing smaller components first")
     @pytest.mark.asyncio
     async def test_split(self):
@@ -32,7 +31,6 @@ class TestComicSplitter:
         cs = ComicSplitter(files, options)
         panels = await cs.split()
         assert len(panels) == 2
-
 
         # TODO: split this up into individual unittest
         # await cs._get_book_data_from_bytes()

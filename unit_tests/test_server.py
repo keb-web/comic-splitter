@@ -22,7 +22,6 @@ class TestServer:
         assert response.json() == {'detail': 'invalid filetype'}
 
     # TODO: add color scheming so we can verify panels
-    # BUG: x, y offset are the wrong values
     @pytest.mark.skip(reason="fix later")
     def test_valid_filetype_posted_returns_split_panels_as_pages(self):
         top_panel = ((150, 100), (2020, 1444))

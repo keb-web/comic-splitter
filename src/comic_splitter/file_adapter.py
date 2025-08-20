@@ -1,12 +1,12 @@
 from io import BytesIO
-from typing import Any, List, Sequence
+from typing import Any, List
 
-# from fastapi import UploadFile
 from starlette.datastructures import UploadFile
 
 # TODO: add filesize checker, if too large raise an error
 # Make a Generator using yield to not use too much ram with large files
 # make async to work concurrently with FastAPI
+
 
 class FileAdapter:
 

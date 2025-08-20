@@ -3,6 +3,7 @@ import pytest
 from comic_splitter.cropper import ImageCropper
 from .page_utils import PageUtils
 
+
 class TestCropper:
 
     def test_crop_image_with_no_panels_returns_original_image(self):

@@ -92,6 +92,7 @@ def main():
     sources = adapter.sources_to_binary_io(file_paths)
     return sources, options
 
+
 async def splitter(sources, options):
     comic_splitter = ComicSplitter(sources, options)
     # await comic_splitter._get_book_data_from_bytes()
