@@ -5,6 +5,8 @@ import cv2
 import numpy as np
 from cv2.typing import MatLike
 
+from comic_splitter.book import Page, PageSection
+
 
 class PanelDetector:
     ''' Detect panels using computer vision contour detection
@@ -15,9 +17,11 @@ class PanelDetector:
         self.min_panel_area = min_panel_area
 
     # TODO: make work with list[PageSection]
-    def detect_panels(self, page: MatLike) -> list[tuple]:
+    def detect_panels(
+            self, page: MatLike, x, y) -> list[tuple]:
+        x_offset, y_offset = x, y
         contours = self.get_panel_contours(page)
-        rects = self.get_panel_shapes(contours, page)
+        rects = self.get_panel_shapes(contours, page, x_offset, y_offset)
         panels = self.get_indexed_panels(rects)
         return panels
 
@@ -72,12 +76,17 @@ class PanelDetector:
             approximate_contours.append(points)
         return approximate_contours
 
-    def get_panel_shapes(self, contours: list[np.ndarray],
-                         page: MatLike) -> list[tuple]:
+    def get_panel_shapes(self,
+                         contours: list[np.ndarray],
+                         page: MatLike,
+                         x_offset: int = 0,
+                         y_offset: int = 0) -> list[tuple]:
         rects = []
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)
-            rects.append(self._apply_margins(x, y, w, h, page))
+            rects.append(self._apply_margins(x + x_offset,
+                                             y + y_offset,
+                                             w, h, page))
         return rects
 
     def _apply_margins(self, x: int, y: int, width: int, height: int,

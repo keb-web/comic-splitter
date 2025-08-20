@@ -16,7 +16,6 @@ class MediaPackager:
         zip_buffer = self._zip(img_byt)
         if zip_buffer is None:
             return
-        print(type(zip_buffer))
         with open(self.download_path, 'wb') as fd:
             fd.write(zip_buffer.getvalue())
 

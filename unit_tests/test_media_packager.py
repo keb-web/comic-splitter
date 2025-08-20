@@ -35,7 +35,6 @@ class TestMediaPackager:
         # zip_buffer = io.BytesIO(zip_buffer.getvalue())
         with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
             namelist = zip_file.namelist()
-            print(namelist)
             assert '1.jpg' in namelist
             assert '2.jpg' in namelist
             assert zip_file.read('1.jpg') == b'fakebytes1'

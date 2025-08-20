@@ -137,7 +137,6 @@ class TestSectionDetector(unittest.TestCase):
         empty_image = np.full((5, 5), 255, dtype=np.uint8)
         section_detector = SectionDetector(empty_image)
         central_indices = section_detector._centralize_indices(gutter_indices)
-        print(central_indices)
         assert central_indices == [2, 15, 37]
 
     def test_labeling_page_with_multiple_panels(self):

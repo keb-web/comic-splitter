@@ -1,26 +1,30 @@
 import argparse
+import asyncio
 import os
-from typing import BinaryIO
 
-from fastapi import UploadFile
-
+from comic_splitter.comic_splitter import ComicSplitter
+from comic_splitter.file_adapter import FileAdapter
 
 VALID_FILE_TYPES = ['jpg', 'png', 'jpeg']
+
 
 def file_path(path: str) -> str:
     if os.path.isfile(path):
         return path
     raise argparse.ArgumentTypeError(f"File does not exist: {path}")
 
+
 def dir_path(path: str) -> str:
     if os.path.isdir(path):
         return path
     raise argparse.ArgumentTypeError(f"Directory does not exist: {path}")
 
+
 def mode(mode: str):
     if mode in ['etch', 'crop']:
         return mode
     raise argparse.ArgumentTypeError("Mode must be 'etch' or 'crop'")
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(
@@ -50,6 +54,7 @@ def parse_arguments():
     args = parser.parse_args()
     return args
 
+
 def _check_valid_file_extension(file_paths: list[str]):
     exts = [fp.rsplit('.', -1)[-1].lower() for fp in file_paths]
     for i, file_extension in enumerate(exts):
@@ -57,6 +62,7 @@ def _check_valid_file_extension(file_paths: list[str]):
             raise argparse.ArgumentTypeError(
                 f"Error: incompatible file: {file_paths[i]}")
     return file_paths
+
 
 def get_options_from_args(args: argparse.Namespace) -> dict:
     options = {}
@@ -66,19 +72,8 @@ def get_options_from_args(args: argparse.Namespace) -> dict:
     options['blank'] = args.blank
     return options
 
-# TODO: 
-# this should eventually just make API calls instead of manually
-# creating upload files
-def get_upload_files_from_paths(paths: list[str]) -> list[UploadFile]:
-    upload_files = []
-    for path in paths:
-        with open(path, "rb") as f:
-            file_content: BinaryIO = f
-            upload_file = UploadFile(file=file_content)
-            upload_files.append(upload_file)
-    return upload_files
 
-if __name__ == '__main__':
+def main():
     args = parse_arguments()
     file_paths = []
     if args.image:
@@ -90,8 +85,19 @@ if __name__ == '__main__':
             full_path = os.path.join(args.dir, entry)
             if os.path.isfile(full_path):
                 file_paths.append(full_path)
-        file_paths = _check_valid_file_extension(file_paths)
-    options = get_options_from_args(args)
-    upload_files = get_upload_files_from_paths(file_paths)
-    # cs = ComicSplitter(upload_files, options)
+        _check_valid_file_extension(file_paths)
 
+    options = get_options_from_args(args)
+    adapter = FileAdapter()
+    sources = adapter.sources_to_binary_io(file_paths)
+    return sources, options
+
+async def splitter(sources, options):
+    comic_splitter = ComicSplitter(sources, options)
+    # await comic_splitter._get_book_data_from_bytes()
+    # print(comic_splitter.book.get_pages())
+    await comic_splitter.split()
+
+if __name__ == '__main__':
+    sources, options = main()
+    asyncio.run(splitter(sources=sources, options=options))

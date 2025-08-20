@@ -36,31 +36,30 @@ class Page:
         self.sections = sections
         self.page_number = page_number
         self.panels = []
-        # self.cache_pages = []
 
     def get_content(self) -> MatLike:
         return self.content
 
-    def get_sections(self) -> list[MatLike]:
-        # if self.cache_pages != []:
-        #     return self.cache_pages
+    def get_sections(self) -> list[PageSection]:
+        return self.sections
 
+    def get_section_contents(self) -> list[MatLike]:
         content_sections = []
         for section in self.sections:
             x, y = section.x_offset, section.y_offset
             height, width = section.height, section.width
             section_content = self.content[y:y+height, x:x+width]
             content_sections.append(section_content)
-
-        # self.cache_pages = content_sections
-        # return self.cache_pages
         return content_sections
 
-    def set_panels(self, panels: list[tuple]):
-        self.panels = panels  # panel coutour coordinates
+    def set_panels(self, panels: list[tuple]) -> None:
+        self.panels = panels  # panel coutour coordinates. TODO: encapsulate
 
-    def add_panels(self, panel: tuple):
+    def add_panel(self, panel: tuple) -> None:
         self.panels.append(panel)
+
+    def extend_panels(self, panels: list[tuple]) -> None:
+        self.panels.extend(panels)
 
 
 class Book:
@@ -75,3 +74,6 @@ class Book:
 
     def add_page(self, page: Page):
         self.pages.append(page)
+
+    def set_pages(self, pages: list[Page]):
+        self.pages = pages

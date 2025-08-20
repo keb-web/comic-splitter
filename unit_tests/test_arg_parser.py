@@ -2,8 +2,7 @@ from argparse import Namespace
 
 from fastapi import UploadFile
 
-from comic_splitter.argument_parser import (
-    get_options_from_args, get_upload_files_from_paths)
+from comic_splitter.argument_parser import (get_options_from_args)
 
 
 class TestArgParser:

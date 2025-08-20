@@ -5,7 +5,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from cv2.typing import MatLike
-from fastapi import UploadFile
+from starlette.datastructures import UploadFile
 
 from comic_splitter.book import PageSection
 

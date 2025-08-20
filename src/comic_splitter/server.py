@@ -1,9 +1,11 @@
-from fastapi import File, Form, UploadFile, HTTPException, FastAPI
-from typing import List, Literal
-from fastapi.middleware.cors import CORSMiddleware
 from base64 import b64encode
+from typing import List, Literal
+
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 
 from comic_splitter.comic_splitter import ComicSplitter
+from comic_splitter.file_adapter import FileAdapter
 
 # rmr to compress image
 
@@ -25,6 +27,7 @@ VALID_FILE_TYPES = ['jpg', 'png', 'jpeg']
 
 
 # TODO: add panel size slider to frontend & feed as parameter to split
+# TODO: add conversion from UploadFile to generic pythonic filetype
 @app.post("/split")
 async def split(mode: Literal['crop', 'etch'] = Form('crop'),
                 blank: bool = Form(False),
@@ -34,10 +37,16 @@ async def split(mode: Literal['crop', 'etch'] = Form('crop'),
     _check_valid_file_extension(files)
     options = {'blank': blank, 'label': label,
                'margins': margins, 'mode': mode}
-    splitter = ComicSplitter(files, options)
+
+    adapter = FileAdapter()
+    files_as_bytesio = adapter.sources_to_binary_io(files)
+    splitter = ComicSplitter(files_as_bytesio, options)
     file_type = files[0].content_type
 
     panels = await splitter.split()
+
+    # if panels is none raise an error
+
     encoded_files = [b64encode(p).decode('utf-8') for p in panels]
     return {'image_type': file_type, 'images': encoded_files}
 
