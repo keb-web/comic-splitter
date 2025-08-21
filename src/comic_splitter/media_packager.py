@@ -1,41 +1,51 @@
+import datetime
 import io
+import os
 import cv2
 import zipfile
 import pathlib
 
+from cv2.typing import MatLike
+
+ZIP_NAME = f'comic-split-{
+                datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.zip'
 DOWNLOAD_PATH = str(pathlib.Path.home() / "Downloads")
 
 
 class MediaPackager:
-    def __init__(self, images: list, path: str = DOWNLOAD_PATH):
+    def __init__(self, images: list[MatLike],
+                 path: str = DOWNLOAD_PATH,
+                 filename: str = ZIP_NAME):
         self.images = images
-        self.download_path = path
+        self.validate_filepath(path)
+        self.download_path = os.path.join(path, filename)
+
+    def validate_filepath(self, path: str):
+        if not os.path.isdir(path):
+            raise Exception(f'Invalid Path: {path}')
 
     def download(self):
-        img_byt = self._convert_images_to_bytes()
-        zip_buffer = self._zip(img_byt)
-        if zip_buffer is None: return
-        print(type(zip_buffer))
+        files = self._convert_images_to_files()
+        zip_buffer = self._zip(files)
         with open(self.download_path, 'wb') as fd:
             fd.write(zip_buffer.getvalue())
 
-    def _zip(self, image_bytes):
-        if image_bytes is None:
-            return
-        zip_buffer = io.BytesIO()
-        with zipfile.ZipFile(
-            zip_buffer, 'a', zipfile.ZIP_DEFLATED) as zip_file:
-            for name, file_bytes in self.images:
-                zip_file.writestr(name, file_bytes)
-        print(type(zip_buffer))
-        return zip_buffer
-
-    def _convert_images_to_bytes(self) -> list:
-        images_as_bytes = []
+    def _convert_images_to_files(
+            self, ext: str = 'jpg') -> list[tuple[str, bytes]]:
+        image_files = []
         for i, image in enumerate(self.images):
-            encoding_status, encoded_image = cv2.imencode('.jpg' , image)
+            encoding_status, encoded_image = cv2.imencode('.jpg', image)
             if encoding_status:
                 img_bytes = encoded_image.tobytes()
-                images_as_bytes.append((f'{i}.jpg', img_bytes))
-        return images_as_bytes
+                file_name = f'{i}.{ext}'
+                file = (file_name, img_bytes)
+                image_files.append(file)
+        return image_files
 
+    def _zip(self, files: list[tuple[str, bytes]]):
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'a',
+                             zipfile.ZIP_DEFLATED) as zip_file:
+            for filename, file_bytes in files:
+                zip_file.writestr(filename, file_bytes)
+        return zip_buffer
