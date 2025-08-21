@@ -1,4 +1,5 @@
 from cv2.typing import MatLike
+import tempfile
 import numpy as np
 import io
 import zipfile
@@ -22,7 +23,9 @@ class TestMediaPackager:
     def test_packager_converts_images_to_bytes(self):
         dummy_images: list[MatLike] = [np.ones((1, 1), dtype=np.uint8),
                                        np.ones((1, 1), dtype=np.uint8)]
-        packager = MediaPackager(dummy_images)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            packager = MediaPackager(dummy_images, path=tmp_dir)
         images_as_bytes = packager._convert_images_to_files()
         for i, (filename, file_bytes) in enumerate(images_as_bytes):
             assert filename == f'{i}.jpg'
@@ -33,7 +36,8 @@ class TestMediaPackager:
                                        np.ones((1, 1), dtype=np.uint8)]
         dummy_image_bytes = [('1.jpg', b'fakebytes1'),
                              ('2.jpg', b'fakebytes2')]
-        packager = MediaPackager(dummy_images)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            packager = MediaPackager(dummy_images, path=tmp_dir)
         zip_buffer = packager._zip(dummy_image_bytes)
         assert zip_buffer is not None
         # zip_buffer = io.BytesIO(zip_buffer.getvalue())
@@ -46,7 +50,8 @@ class TestMediaPackager:
 
     def test_packager_downloads_zip_buffer(self):
         mock_bytes_io = MagicMock(spec=io.BytesIO)
-        packager = MediaPackager([])
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            packager = MediaPackager([], path=tmp_dir)
         with patch.object(packager, '_zip', return_value=mock_bytes_io), \
              patch('builtins.open', mock_open()) as mock_file:
             packager.download()
