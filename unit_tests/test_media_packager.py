@@ -1,3 +1,4 @@
+from cv2.typing import MatLike
 import numpy as np
 import io
 import zipfile
@@ -19,17 +20,20 @@ class TestMediaPackager:
     #     mock_imwrite.assert_not_called()
 
     def test_packager_converts_images_to_bytes(self):
-        dummy_images = [np.ones((1, 1)), np.ones((1, 1))]
+        dummy_images: list[MatLike] = [np.ones((1, 1), dtype=np.uint8),
+                                       np.ones((1, 1), dtype=np.uint8)]
         packager = MediaPackager(dummy_images)
-        images_as_bytes = packager._convert_images_to_bytes()
+        images_as_bytes = packager._convert_images_to_files()
         for i, (filename, file_bytes) in enumerate(images_as_bytes):
             assert filename == f'{i}.jpg'
             assert isinstance(file_bytes, bytes)
 
     def test_packager_zip_function(self):
+        dummy_images: list[MatLike] = [np.ones((1, 1), dtype=np.uint8),
+                                       np.ones((1, 1), dtype=np.uint8)]
         dummy_image_bytes = [('1.jpg', b'fakebytes1'),
                              ('2.jpg', b'fakebytes2')]
-        packager = MediaPackager(dummy_image_bytes)
+        packager = MediaPackager(dummy_images)
         zip_buffer = packager._zip(dummy_image_bytes)
         assert zip_buffer is not None
         # zip_buffer = io.BytesIO(zip_buffer.getvalue())

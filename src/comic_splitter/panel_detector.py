@@ -8,6 +8,7 @@ from cv2.typing import MatLike
 
 class PanelDetector:
     ''' Detect panels using computer vision contour detection
+        contours represented as a tuple: (x, y, width, height)
     '''
 
     def __init__(self, margins: int = 0, min_panel_area: int = -1):
@@ -20,6 +21,7 @@ class PanelDetector:
         x_offset, y_offset = x, y
         contours = self.get_panel_contours(page)
         rects = self.get_panel_shapes(contours, page, x_offset, y_offset)
+        # rects slightly off between argparse and api rectangles go negative 
         panels = self.get_indexed_panels(rects)
         return panels
 

@@ -13,3 +13,6 @@ class TestArgParser:
         options = get_options_from_args(args)
         assert options == {'mode': 'crop', 'margins': 1,
                            'label': True, 'blank': True}
+
+    # det test_argparser_works_with_real_page(self):
+    #     pass

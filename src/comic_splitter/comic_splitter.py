@@ -25,11 +25,11 @@ class ComicSplitter:
         self.panel_detector = PanelDetector(margins=options['margins'])
         self.page_builder = PageBuilder(files)
 
-    async def split(self) -> list:
+    async def split(self) -> list[MatLike]:
         await self._get_book_data_from_bytes()
         panel_imgs = self.generate_panel_images(
             self.options['mode'], self.book.get_pages())
-        return self.encode_panels_to_bytes(panel_imgs)
+        return panel_imgs
 
     async def _get_book_data_from_bytes(self):
         self.book.set_pages(await self.page_builder.generate_pages())
@@ -51,38 +51,31 @@ class ComicSplitter:
         panel_imgs = []
         if mode == 'crop':
             for page in pages:
-                # NOTE: Default implementation
-                panel_imgs.extend(
-                    self.cropper.crop(page.content, page.panels)
-                )
+                # NOTE: Default contour-based implementation
+                # panel_imgs.extend(
+                #     self.cropper.crop(page.content, page.panels)
+                # )
 
                 # NOTE: testing sections are properly detected
-                # panel_imgs.extend(
-                #     self.cropper._crop_section(
-                #         page.get_content(), page.get_sections()))
+                panel_imgs.extend(
+                    self.cropper._crop_section(
+                        page.get_content(), page.get_sections()))
 
         elif mode == 'etch':
             for page in pages:
+                # NOTE: Default contour-based implementation
                 panel_imgs.append(
-                    self.etcher.etch(page=page.content,
-                                     rectangles=page.panels,
+                    self.etcher.etch(page=page.get_content(),
+                                     rectangles=page.get_panels(),
                                      label=self.options['label'],
                                      blank=self.options['blank'])
                 )
 
-        if panel_imgs != []:
-            print(type(panel_imgs[0]))
-        print(len(panel_imgs))
-
+                # NOTE: testing sections are properly detected
+                # panel_imgs.append(
+                #     self.etcher._etch_section(page=page.get_content(),
+                #                               rectangles=page.get_sections(),
+                #                               label=self.options['label'],
+                #                               blank=self.options['blank'])
+                # )
         return panel_imgs
-
-    def encode_panels_to_bytes(self, panel_imgs, format: str = '.jpg'):
-        panel_imgs_as_bytes = []
-        for img_arr in panel_imgs:
-            success, buf = cv2.imencode(format, img_arr)
-            if not success:
-                raise ValueError("Failed to encode panel image")
-            img_bytes = buf.tobytes()
-            panel_imgs_as_bytes.append(img_bytes)
-
-        return panel_imgs_as_bytes

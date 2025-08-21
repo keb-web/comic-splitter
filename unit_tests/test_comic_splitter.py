@@ -1,3 +1,4 @@
+from comic_splitter.book import Book, Page, PageSection
 from comic_splitter.comic_splitter import ComicSplitter
 import pytest
 
@@ -16,6 +17,27 @@ class TestComicSplitter:
         cs = ComicSplitter(files=[], options=dummy_options)
         await cs._get_book_data_from_bytes()
         assert cs.book.get_pages() == []
+
+    @pytest.mark.asyncio
+    async def test_splitter_detects_panels_with_offset_coordinates(self):
+        dummy_bounds = ((1, 1), (10, 1), (1, 5), (10, 5))
+        dummy_section = PageSection(dummy_bounds, 50, 50)
+        fake_page_content = utils.generate_page([((51, 51), (60, 65),)],
+                                                page_height=120,
+                                                page_width=120,
+                                                thickness=1)
+        dummy_page = Page(content=fake_page_content,
+                          sections=[dummy_section],)
+        dummy_book = Book()
+        dummy_book.add_page(dummy_page)
+
+        dummy_options = {'margins': 0}
+        cs = ComicSplitter(files=[], options=dummy_options)
+        cs.book = dummy_book
+
+        await cs._detect_page_panels()
+        x, y, _, _ = cs.book.pages[0].panels[0]
+        assert x > 50 and y > 50
 
     @pytest.mark.skip(reason="testing smaller components first")
     @pytest.mark.asyncio

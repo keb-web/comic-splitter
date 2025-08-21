@@ -1,6 +1,8 @@
 from base64 import b64encode
 from typing import List, Literal
 
+import cv2
+from cv2.typing import MatLike
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -44,10 +46,11 @@ async def split(mode: Literal['crop', 'etch'] = Form('crop'),
     file_type = files[0].content_type
 
     panels = await splitter.split()
+    panels_as_bytes = encode_panels_to_bytes(panels)
 
     # if panels is none raise an error
 
-    encoded_files = [b64encode(p).decode('utf-8') for p in panels]
+    encoded_files = [b64encode(p).decode('utf-8') for p in panels_as_bytes]
     return {'image_type': file_type, 'images': encoded_files}
 
 
@@ -56,3 +59,19 @@ def _check_valid_file_extension(files: List[UploadFile]):
         name = file.filename
         if name and name.rsplit('.', -1)[-1].lower() not in VALID_FILE_TYPES:
             raise HTTPException(status_code=400, detail='invalid filetype')
+
+
+def encode_panels_to_bytes(panel_imgs: list[MatLike], format: str = '.jpg'):
+    panel_imgs_as_bytes = []
+    for img_arr in panel_imgs:
+        # BUG: empty panel_img slices when cropping
+        if img_arr is None or img_arr.size == 0:
+            print("Skipping empty image")
+            continue
+        success, buf = cv2.imencode(format, img_arr)
+        if not success:
+            raise ValueError("Failed to encode panel image")
+        img_bytes = buf.tobytes()
+        panel_imgs_as_bytes.append(img_bytes)
+
+    return panel_imgs_as_bytes

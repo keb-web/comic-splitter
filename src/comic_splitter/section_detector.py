@@ -42,7 +42,7 @@ class SectionDetector:
         return False
 
     def detect_page_sections(self) -> list[PageSection]:
-        subpanels = []
+        subsections = []
         st = [self.page_boundaries]
         while st:
             bounds = st.pop()
@@ -51,14 +51,14 @@ class SectionDetector:
 
             if (self._single_panel(h_gutters, v_gutters)
                     and not self._section_is_empty(bounds, x, y)):
-                subpanels.append(PageSection(bounds, x, y))
+                subsections.append(PageSection(bounds, x, y))
             else:
                 intersections = self.get_intersections(v_gutters, h_gutters)
                 new_bounds = self.get_panel_bounds_from_intersections(
                     intersections)
                 st.extend(new_bounds)
 
-        return subpanels
+        return subsections
 
     def _single_panel(self, h_gutters, v_gutters):
         return len(v_gutters) == 2 and len(h_gutters) == 2

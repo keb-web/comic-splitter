@@ -1,9 +1,15 @@
 import argparse
 import asyncio
+import datetime
 import os
+import pathlib
+
+from cv2.typing import MatLike
+import cv2
 
 from comic_splitter.comic_splitter import ComicSplitter
 from comic_splitter.file_adapter import FileAdapter
+from comic_splitter.media_packager import MediaPackager
 
 VALID_FILE_TYPES = ['jpg', 'png', 'jpeg']
 
@@ -42,7 +48,7 @@ def parse_arguments():
         "-c", "--cropmode", type=mode, default='crop',
         help="Specify 'etch' or 'crop' mode")
     parser.add_argument(
-        "-m", "--margins", type=int, default=1,
+        "-m", "--margins", type=int, default=0,
         help='Specify margin size (pixels)')
     parser.add_argument(
         '-l', '--label', action=argparse.BooleanOptionalAction,
@@ -93,12 +99,13 @@ def main():
     return sources, options
 
 
-async def splitter(sources, options):
+async def splitter(sources, options) -> list[MatLike]:
     comic_splitter = ComicSplitter(sources, options)
-    # await comic_splitter._get_book_data_from_bytes()
-    # print(comic_splitter.book.get_pages())
-    await comic_splitter.split()
+    return await comic_splitter.split()
+
 
 if __name__ == '__main__':
     sources, options = main()
-    asyncio.run(splitter(sources=sources, options=options))
+    file_data = asyncio.run(splitter(sources=sources, options=options))
+    packager = MediaPackager(images=file_data)
+    packager.download()

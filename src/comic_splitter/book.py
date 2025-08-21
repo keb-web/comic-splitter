@@ -3,7 +3,8 @@ from cv2.typing import MatLike
 
 class PageSection:
 
-    def __init__(self, bounds, x, y):
+    # bounds = (tl, tr, bl, br) # TODO: refactor into intuitve interface
+    def __init__(self, bounds: tuple, x: int, y: int):
         self.bounds = bounds
         self.top_left = bounds[0]
         self.top_right = bounds[1]
@@ -52,6 +53,9 @@ class Page:
             content_sections.append(section_content)
         return content_sections
 
+    def get_panels(self) -> list[tuple]:
+        return self.panels
+
     def set_panels(self, panels: list[tuple]) -> None:
         self.panels = panels  # panel coutour coordinates. TODO: encapsulate
 
@@ -66,7 +70,6 @@ class Book:
     def __init__(self, metadata: dict = {}):
         self.metadata = metadata
         self.pages = []
-        self.page_panels = []
         self.page_images = []
 
     def get_pages(self) -> list[Page]:
