@@ -1,11 +1,8 @@
 import argparse
 import asyncio
-import datetime
 import os
-import pathlib
 
 from cv2.typing import MatLike
-import cv2
 
 from comic_splitter.comic_splitter import ComicSplitter
 from comic_splitter.file_adapter import FileAdapter

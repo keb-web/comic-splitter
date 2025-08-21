@@ -1,6 +1,5 @@
 from io import BytesIO
 
-import cv2
 from cv2.typing import MatLike
 
 from comic_splitter.book import Book, Page

@@ -21,7 +21,8 @@ class PanelDetector:
         x_offset, y_offset = x, y
         contours = self.get_panel_contours(page)
         rects = self.get_panel_shapes(contours, page, x_offset, y_offset)
-        # rects slightly off between argparse and api rectangles go negative 
+        # rects slightly off between argparse and api rectangles go negative
+        # due to margins
         panels = self.get_indexed_panels(rects)
         return panels
 
