@@ -3,6 +3,7 @@ import asyncio
 import os
 
 from cv2.typing import MatLike
+from numpy import full
 
 from comic_splitter.comic_splitter import ComicSplitter
 from comic_splitter.config import VALID_FILE_TYPES
@@ -19,17 +20,17 @@ class ArgumentParser:
         self.file_adapter: FileAdapter = FileAdapter()
 
     def get_arguments(self):
-        if self.args is None:
+        if not hasattr(self, 'args'):
             self.parse_arguments()
         return self.args
 
     def get_file_paths(self):
-        if self.file_paths is None:
+        if not hasattr(self, 'file_paths'):
             self._parse_file_paths()
         return self.file_paths
 
     def get_options(self) -> dict:
-        if self.options is None:
+        if not hasattr(self, 'options'):
             self._set_options()
         return self.options
 
@@ -79,6 +80,7 @@ class ArgumentParser:
 
         args = parser.parse_args()
         self.args = args
+
         self._parse_file_paths()
         self._set_options()
 
