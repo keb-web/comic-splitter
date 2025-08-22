@@ -1,15 +1,10 @@
-import datetime
 import io
 import os
 import cv2
 import zipfile
-import pathlib
 
 from cv2.typing import MatLike
-
-ZIP_NAME = f'comic-split-{
-                datetime.datetime.now().strftime("%Y%m%d-%H%M%S")}.zip'
-DOWNLOAD_PATH = str(pathlib.Path.home() / "Downloads")
+from comic_splitter.config import ZIP_NAME, DOWNLOAD_PATH
 
 
 class MediaPackager:

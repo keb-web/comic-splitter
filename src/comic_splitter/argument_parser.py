@@ -1,14 +1,8 @@
 import argparse
-import asyncio
 import os
 
-from cv2.typing import MatLike
-from numpy import full
-
-from comic_splitter.comic_splitter import ComicSplitter
 from comic_splitter.config import VALID_FILE_TYPES
 from comic_splitter.file_adapter import FileAdapter
-from comic_splitter.media_packager import MediaPackager
 
 
 class ArgumentParser:
@@ -113,32 +107,3 @@ class ArgumentParser:
         options['label'] = self.args.label
         options['blank'] = self.args.blank
         self.options = options
-
-
-def get_args():
-    parser = ArgumentParser()
-    parser.parse_arguments()
-    options = parser.get_options()
-    sources = parser.get_binary_sources()
-    return options, sources
-
-
-async def split_sources(sources, options) -> list[MatLike]:
-    comic_splitter = ComicSplitter(sources, options)
-    return await comic_splitter.split()
-
-
-def package(images: list[MatLike]):
-    packager = MediaPackager(images=images)
-    packager.download()
-
-
-def main():
-    options, sources = get_args()
-    split_file_data = asyncio.run(
-        split_sources(sources=sources, options=options))
-    package(split_file_data)
-
-
-if __name__ == '__main__':
-    main()

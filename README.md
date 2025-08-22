@@ -16,8 +16,10 @@ testing run: `fastapi run main.py`
 pyproject.toml initial setup
 `pip install .`
 
-## Local
+## Run as Module
 
-**using arg parser**
-in src/
-`python -m comic_splitter.argument_parser -i ../unit_tests/assets/real_gutter_test_fill.jpg`
+**in src/**
+_Single Image_
+`python -m comic_splitter -i ../unit_tests/assets/test_page_multiple_panels.jpg`
+_Directory of Valid Files_
+`python -m comic_splitter -d ../unit_tests/assets/`
