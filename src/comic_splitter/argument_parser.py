@@ -5,104 +5,138 @@ import os
 from cv2.typing import MatLike
 
 from comic_splitter.comic_splitter import ComicSplitter
+from comic_splitter.config import VALID_FILE_TYPES
 from comic_splitter.file_adapter import FileAdapter
 from comic_splitter.media_packager import MediaPackager
 
-VALID_FILE_TYPES = ['jpg', 'png', 'jpeg']
 
+class ArgumentParser:
+    args: argparse.Namespace
+    file_paths: list[str]
+    options: dict
 
-def file_path(path: str) -> str:
-    if os.path.isfile(path):
-        return path
-    raise argparse.ArgumentTypeError(f"File does not exist: {path}")
+    def __init__(self):
+        self.file_adapter: FileAdapter = FileAdapter()
 
+    def get_arguments(self):
+        if self.args is None:
+            self.parse_arguments()
+        return self.args
 
-def dir_path(path: str) -> str:
-    if os.path.isdir(path):
-        return path
-    raise argparse.ArgumentTypeError(f"Directory does not exist: {path}")
+    def get_file_paths(self):
+        if self.file_paths is None:
+            self._parse_file_paths()
+        return self.file_paths
 
+    def get_options(self) -> dict:
+        if self.options is None:
+            self._set_options()
+        return self.options
 
-def mode(mode: str):
-    if mode in ['etch', 'crop']:
-        return mode
-    raise argparse.ArgumentTypeError("Mode must be 'etch' or 'crop'")
+    def get_binary_sources(self):
+        sources = self.file_adapter.sources_to_binary_io(self.get_file_paths())
+        return sources
 
+    def file_path(self, path: str) -> str:
+        if os.path.isfile(path):
+            return path
+        raise argparse.ArgumentTypeError(f"File does not exist: {path}")
 
-def parse_arguments():
-    parser = argparse.ArgumentParser(
-        description='Comic Panel Detection using Computer Vision')
+    def dir_path(self, path: str) -> str:
+        if os.path.isdir(path):
+            return path
+        raise argparse.ArgumentTypeError(f"Directory does not exist: {path}")
 
-    input_group = parser.add_mutually_exclusive_group(required=True)
-    input_group.add_argument(
-        "-i", "--image", type=file_path,
-        help='Path to image file')
-    input_group.add_argument(
-        "-d", "--dir", type=dir_path,
-        help='Path to images directory')
+    def mode(self, mode: str):
+        if mode in ['etch', 'crop']:
+            return mode
+        raise argparse.ArgumentTypeError("Mode must be 'etch' or 'crop'")
 
-    parser.add_argument(
-        "-c", "--cropmode", type=mode, default='crop',
-        help="Specify 'etch' or 'crop' mode")
-    parser.add_argument(
-        "-m", "--margins", type=int, default=0,
-        help='Specify margin size (pixels)')
-    parser.add_argument(
-        '-l', '--label', action=argparse.BooleanOptionalAction,
-        help='Label panel numbers')
-    parser.add_argument(
-        '-b', '--blank', action=argparse.BooleanOptionalAction,
-        help='fill detected contours')
+    def parse_arguments(self):
+        parser = argparse.ArgumentParser(
+            description='Comic Panel Detection using Computer Vision')
 
-    args = parser.parse_args()
-    return args
+        input_group = parser.add_mutually_exclusive_group(required=True)
+        input_group.add_argument(
+            "-i", "--image", type=self.file_path,
+            help='Path to image file')
+        input_group.add_argument(
+            "-d", "--dir", type=self.dir_path,
+            help='Path to images directory')
 
+        parser.add_argument(
+            "-c", "--cropmode", type=self.mode, default='crop',
+            help="Specify 'etch' or 'crop' mode")
+        parser.add_argument(
+            "-m", "--margins", type=int, default=0,
+            help='Specify margin size (pixels)')
+        parser.add_argument(
+            '-l', '--label', action=argparse.BooleanOptionalAction,
+            help='Label panel numbers')
+        parser.add_argument(
+            '-b', '--blank', action=argparse.BooleanOptionalAction,
+            help='fill detected contours')
 
-def _check_valid_file_extension(file_paths: list[str]):
-    exts = [fp.rsplit('.', -1)[-1].lower() for fp in file_paths]
-    for i, file_extension in enumerate(exts):
-        if file_extension not in VALID_FILE_TYPES:
-            raise argparse.ArgumentTypeError(
-                f"Error: incompatible file: {file_paths[i]}")
-    return file_paths
+        args = parser.parse_args()
+        self.args = args
+        self._parse_file_paths()
+        self._set_options()
 
-
-def get_options_from_args(args: argparse.Namespace) -> dict:
-    options = {}
-    options['mode'] = args.cropmode
-    options['margins'] = args.margins
-    options['label'] = args.label
-    options['blank'] = args.blank
-    return options
-
-
-def main():
-    args = parse_arguments()
-    file_paths = []
-    if args.image:
-        file_paths = _check_valid_file_extension([args.image])
-    if args.dir:
-        entries = os.listdir(args.dir)
+    def _parse_file_paths(self):
         file_paths = []
-        for entry in entries:
-            full_path = os.path.join(args.dir, entry)
-            if os.path.isfile(full_path):
-                file_paths.append(full_path)
-        _check_valid_file_extension(file_paths)
+        if self.args.image:
+            file_paths = self._check_valid_file_extension([self.args.image])
+        elif self.args.dir:
+            entries = os.listdir(self.args.dir)
+            file_paths = []
+            for entry in entries:
+                full_path = os.path.join(self.args.dir, entry)
+                if os.path.isfile(full_path):
+                    file_paths.append(full_path)
+            self._check_valid_file_extension(file_paths)
+        self.file_paths = file_paths
 
-    options = get_options_from_args(args)
-    adapter = FileAdapter()
-    sources = adapter.sources_to_binary_io(file_paths)
-    return sources, options
+    def _check_valid_file_extension(self, file_paths: list[str]):
+        exts = [fp.rsplit('.', -1)[-1].lower() for fp in file_paths]
+        for i, file_extension in enumerate(exts):
+            if file_extension not in VALID_FILE_TYPES:
+                raise argparse.ArgumentTypeError(
+                    f"Error: incompatible file: {file_paths[i]}")
+        return file_paths
+
+    def _set_options(self):
+        options = {}
+        options['mode'] = self.args.cropmode
+        options['margins'] = self.args.margins
+        options['label'] = self.args.label
+        options['blank'] = self.args.blank
+        self.options = options
 
 
-async def splitter(sources, options) -> list[MatLike]:
+def get_args():
+    parser = ArgumentParser()
+    parser.parse_arguments()
+    options = parser.get_options()
+    sources = parser.get_binary_sources()
+    return options, sources
+
+
+async def split_sources(sources, options) -> list[MatLike]:
     comic_splitter = ComicSplitter(sources, options)
     return await comic_splitter.split()
 
 
-if __name__ == '__main__':
-    sources, options = main()
-    file_data = asyncio.run(splitter(sources=sources, options=options))
-    packager = MediaPackager(images=file_data)
+def package(images: list[MatLike]):
+    packager = MediaPackager(images=images)
     packager.download()
+
+
+def main():
+    options, sources = get_args()
+    split_file_data = asyncio.run(
+        split_sources(sources=sources, options=options))
+    package(split_file_data)
+
+
+if __name__ == '__main__':
+    main()

@@ -7,9 +7,11 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from comic_splitter.comic_splitter import ComicSplitter
+from comic_splitter.config import VALID_FILE_TYPES
 from comic_splitter.file_adapter import FileAdapter
 
-# rmr to compress image
+
+# NOTE: rmr to compress image
 
 app = FastAPI()
 
@@ -25,11 +27,10 @@ app.add_middleware(
     allow_headers=["X-Requested-With", "Content-Type"],
 )
 
-VALID_FILE_TYPES = ['jpg', 'png', 'jpeg']
-
 
 # TODO: add panel size slider to frontend & feed as parameter to split
 # TODO: add conversion from UploadFile to generic pythonic filetype
+
 @app.post("/split")
 async def split(mode: Literal['crop', 'etch'] = Form('crop'),
                 blank: bool = Form(False),
