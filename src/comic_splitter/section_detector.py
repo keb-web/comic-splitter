@@ -50,7 +50,7 @@ class SectionDetector:
                 self.page, bounds)
 
             if (self._single_panel(h_gutters, v_gutters)
-                    and not self._section_is_empty(bounds, x, y)):
+                    and not self._section_is_empty(bounds)):
                 subsections.append(PageSection(bounds, x, y))
             else:
                 intersections = self.get_intersections(v_gutters, h_gutters)
@@ -63,15 +63,14 @@ class SectionDetector:
     def _single_panel(self, h_gutters, v_gutters):
         return len(v_gutters) == 2 and len(h_gutters) == 2
 
-    def _section_is_empty(self, bounds: tuple, x_offset: int,
-                          y_offset: int, empty_value=255):
+    def _section_is_empty(self, bounds: tuple, empty_value=255):
         top_left, top_right, bottom_left, bottom_right = bounds
         x, y = 0, 1
 
-        min_row = y_offset + min(top_left[y], top_right[y])
-        max_row = y_offset + max(bottom_left[y], bottom_right[y])
-        min_col = x_offset + min(top_left[x], bottom_left[x])
-        max_col = x_offset + max(top_right[x], bottom_right[x])
+        min_row = min(top_left[y], top_right[y])
+        max_row = max(bottom_left[y], bottom_right[y])
+        min_col = min(top_left[x], bottom_left[x])
+        max_col = max(top_right[x], bottom_right[x])
 
         region = self.page[min_row:max_row, min_col:max_col]
         return np.all(region == empty_value)
