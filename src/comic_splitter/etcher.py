@@ -17,11 +17,22 @@ class Etcher:
         canvas = np.ones(
             (height, width, 3), np.uint8) if blank else page.copy()
 
+        red = (0, 0, 255)
+        blue = (255, 0, 0)
+        green = (0, 255, 0)
+        colors = [red, blue, green]
+
+        color_picker = 0
         for (x, y, w, h) in rectangles:
+            if color_picker == 3:
+                color_picker = 0
             if mode == 'RECTANGLES':
-                cv2.rectangle(canvas, (x, y), (x + w, y + h), (0, 0, 255), -1)
+                cv2.rectangle(canvas, (x, y), (x + w, y + h),
+                              colors[color_picker], -1)
             elif mode == 'BORDER':
-                cv2.rectangle(canvas, (x, y), (x + w, y + h), (0, 0, 255), 3)
+                cv2.rectangle(canvas, (x, y), (x + w, y + h),
+                              colors[color_picker], 3)
+            color_picker += 1
 
         if label:
             self.draw_label_contours(canvas, rectangles)
