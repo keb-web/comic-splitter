@@ -271,7 +271,7 @@ class TestSectionDetector(unittest.TestCase):
         color_image = np.ones((height, width, channels), dtype=np.uint8)
         unpadded_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
 
-        with self.assertRaisesRegex(Exception, 'image with >1 channels'):
+        with self.assertRaisesRegex(Exception, 'image with >1'):
             SectionDetector(color_image)
 
         with self.assertRaisesRegex(Exception, 'image without padding'):

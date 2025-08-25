@@ -38,27 +38,32 @@ class ComicSplitter:
         for page in self.book.get_pages():
             panels = []
             sections = page.get_sections()
-            section_contents = page.get_section_contents()
+            processsed_section_contents = page.get_processed_section_content()
+            # section_contents = page.get_section_contents()
+
             for i in range(len(sections)):
                 x, y = sections[i].x_offset, sections[i].y_offset
                 detected_panels = self.panel_detector.detect_panels(
-                    section_contents[i], x, y)
+                    processsed_section_contents[i], x, y)
                 panels.extend(detected_panels)
             page.extend_panels(panels)
+
+            print(f'section amount: {len(sections)}')
+            print(f'len panels: {len(panels)}')
 
     def generate_panel_images(self, mode, pages: list[Page]) -> list[MatLike]:
         panel_imgs = []
         if mode == 'crop':
             for page in pages:
                 # NOTE: Default contour-based implementation
-                # panel_imgs.extend(
-                #     self.cropper.crop(page.content, page.panels)
-                # )
+                panel_imgs.extend(
+                    self.cropper.crop(page.get_content(), page.get_panels())
+                )
 
                 # NOTE: testing sections are properly detected
-                panel_imgs.extend(
-                    self.cropper._crop_section(
-                        page.get_content(), page.get_sections()))
+                # panel_imgs.extend(
+                #     self.cropper._crop_section(
+                #         page.get_content(), page.get_sections()))
 
         elif mode == 'etch':
             for page in pages:
@@ -72,9 +77,10 @@ class ComicSplitter:
 
                 # NOTE: testing sections are properly detected
                 # panel_imgs.append(
-                #     self.etcher._etch_section(page=page.get_content(),
-                #                               rectangles=page.get_sections(),
-                #                               label=self.options['label'],
-                #                               blank=self.options['blank'])
+                # self.etcher._etch_section(page=page.get_content(),
+                #                           rectangles=page.get_sections(),
+                #                           label=self.options['label'],
+                #                           blank=self.options['blank']
+                #                           )
                 # )
         return panel_imgs

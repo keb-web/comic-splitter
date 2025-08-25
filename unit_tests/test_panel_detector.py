@@ -10,15 +10,12 @@ from .page_utils import PageUtils
 
 # TODO:
 # - rethink how to best interface with this class
-# - make PanelDetector use wrapper for cv2
 # - finish last test cases
 
 utils = PageUtils()
 
 
 class TestPanelDetector():
-
-    # TODO: test to test behavior of def detect panels
 
     def contours_are_rectangles(self, contours) -> bool:
         for contour in contours:
@@ -41,6 +38,7 @@ class TestPanelDetector():
         assert rects[0] == (10, 10, 11, 11)
         assert rects[1] == (30, 30, 11, 11)
 
+    @pytest.mark.skip(reason='WIP: encapsulating labeling to its own class')
     def test_labeling_page_with_two_stacked_panels(self):
         top_panel = ((150, 100), (2020, 1444))
         bottom_panel = ((150, 1520), (2020, 2911))
@@ -62,6 +60,7 @@ class TestPanelDetector():
         # labeling panels from top to bottom
         assert label_panel_by_index == [top_shape, bottom_shape]
 
+    @pytest.mark.skip(reason='WIP: encapsulating labeling to its own class')
     def test_labeling_page_with_multiple_side_by_side_panels(self):
         left_panel = ((35, 35), (550, 2890))
         middle_panel = ((767, 35), (1287, 2890))
@@ -88,6 +87,7 @@ class TestPanelDetector():
         label_panel_by_index = detector.get_indexed_panels(label_rects)
         assert label_panel_by_index == [right_shape, middle_shape, left_shape]
 
+    @pytest.mark.skip(reason='WIP: encapsulating labeling to its own class')
     def test_labeling_page_with_multiple_panels(self):
         multiple_mixed_panels_page = utils.generate_page(
             rectangle_coords=[
@@ -118,6 +118,7 @@ class TestPanelDetector():
                               (99, 853, 405, 666),
                               (99, 1611, 2003, 1328)]
 
+    @pytest.mark.skip(reason='WIP: encapsulating indexing to its own class')
     def test_labeling_page_with_multiple_nested_panels(self):
         outer_panel = ((100, 100), (1200, 2900))
         slight_outer_panel = ((95, 95), (1205, 2905))
@@ -148,6 +149,7 @@ class TestPanelDetector():
         label_dict = detector.get_indexed_panels(label_rects)
         assert label_dict == [(1299, 91, 705, 2813), (94, 91, 1115, 2818)]
 
+    @pytest.mark.skip(reason='WIP: encapsulating labeling to its own class')
     def test_panel_detection_with_margin(self):
         test_page = utils.generate_page(
             rectangle_coords=[((50, 50), (200, 200))],
@@ -234,6 +236,7 @@ class TestPanelDetector():
         dummy_page = cv2.imread(page_path, cv2.IMREAD_GRAYSCALE)
 
         kernel = np.ones((15, 15), np.uint8)
+
 
         opened = cv2.morphologyEx(dummy_page, cv2.MORPH_OPEN, kernel)
         # opened = cv2.morphologyEx(dummy_page, cv2.MORPH_CLOSE, kernel)

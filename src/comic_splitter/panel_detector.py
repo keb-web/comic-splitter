@@ -7,57 +7,34 @@ from cv2.typing import MatLike
 
 
 class PanelDetector:
-    ''' Detect panels using computer vision contour detection
-        contours represented as a tuple: (x, y, width, height)
+    '''
+    Detect panels using computer vision contour detection
+    contours represented as a tuple: (x, y, width, height)
     '''
 
     def __init__(self, margins: int = 0, min_panel_area: int = -1):
         self.margins = margins
         self.min_panel_area = min_panel_area
 
-    # TODO: make work with list[PageSection]
     def detect_panels(
-            self, page: MatLike, x, y) -> list[tuple]:
+            self, page: MatLike, x: int, y: int) -> list[tuple]:
         x_offset, y_offset = x, y
         contours = self.get_panel_contours(page)
         rects = self.get_panel_shapes(contours, page, x_offset, y_offset)
-        # rects slightly off between argparse and api rectangles go negative
-        # due to margins
+        #  BUG:  rects slightly off between argparse and api
+        #  because rectangles go negative due to margins
         panels = self.get_indexed_panels(rects)
         return panels
 
     def get_panel_contours(self, page: MatLike) -> list[np.ndarray]:
-
-        # TODO: after sectioning,
-        # disk morphology or dilate to try to fix gaps
-        # or try all transformations and see what works best
-        # or try solution proposed in readme
-        # dilation kind of works...readme seems better solution
-
-        edge_page = self._preprocess_image(page)
-
+        edge_page = page
         contours, _ = cv2.findContours(
             edge_page, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # TODO: add more contour checking here
-
+        # TODO: more robust contour checking
         contours = self._remove_small_contours(contours)
 
         return self._approximate_contours(contours)
-
-    def _preprocess_image(self, page: np.ndarray) -> np.ndarray:
-
-        # kernel = np.ones((10,10),np.uint8)
-        # erosion_page = cv2.erode(page, kernel,iterations = 10)
-        # dilate_page = cv2.dilate(erosion_page, kernel,iterations = 10)
-        # blur_page = cv2.GaussianBlur(dilate_page, (5, 5), 0)
-
-        blur_page = cv2.GaussianBlur(page, (5, 5), 0)
-        thresh_page = cv2.threshold(blur_page, 0, 255,
-                                    cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-        edge_page = cv2.Canny(thresh_page, 30, 200)
-
-        return edge_page
 
     def _remove_small_contours(self, contours: Sequence[MatLike]):
         big_contours = []

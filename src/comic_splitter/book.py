@@ -30,10 +30,10 @@ class PageSection:
 
 
 class Page:
-    def __init__(
-        self, content: MatLike, sections: list[PageSection],
-            page_number: int = -1):
+    def __init__(self, content: MatLike, processed_content: MatLike,
+                 sections: list[PageSection], page_number: int = -1):
         self.content = content
+        self.processed_content = processed_content
         self.sections = sections
         self.page_number = page_number
         self.panels = []
@@ -43,6 +43,15 @@ class Page:
 
     def get_sections(self) -> list[PageSection]:
         return self.sections
+
+    def get_processed_section_content(self) -> list[MatLike]:
+        content_sections = []
+        for section in self.sections:
+            x, y = section.x_offset, section.y_offset
+            height, width = section.height, section.width
+            section_content = self.processed_content[y:y+height, x:x+width]
+            content_sections.append(section_content)
+        return content_sections
 
     def get_section_contents(self) -> list[MatLike]:
         content_sections = []

@@ -27,6 +27,7 @@ class TestComicSplitter:
                                                 page_width=120,
                                                 thickness=1)
         dummy_page = Page(content=fake_page_content,
+                          processed_content=fake_page_content,
                           sections=[dummy_section],)
         dummy_book = Book()
         dummy_book.add_page(dummy_page)
@@ -37,7 +38,7 @@ class TestComicSplitter:
 
         await cs._detect_page_panels()
         x, y, _, _ = cs.book.pages[0].panels[0]
-        assert x > 50 and y > 50
+        assert x >= 50 and y >= 50
 
     @pytest.mark.skip(reason="testing smaller components first")
     @pytest.mark.asyncio

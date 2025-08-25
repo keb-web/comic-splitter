@@ -25,7 +25,7 @@ class SectionDetector:
             channels = 1
 
         if channels > 1:
-            raise Exception('Attempt detection of image with >1 channels')
+            raise Exception('Attempt detection of image with >1')
         elif self._border_exists(page) is False:
             raise Exception('Attempt detection of image without padding')
 
