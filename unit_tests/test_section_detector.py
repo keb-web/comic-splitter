@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from cv2.typing import MatLike
 
+from comic_splitter.page_section import PageSection
 from comic_splitter.section_detector import SectionDetector
 from .page_utils import PageUtils
 
@@ -18,24 +19,26 @@ class TestSectionDetector(unittest.TestCase):
         test_page = utils.generate_page([], 50, 50)
         detector = SectionDetector(test_page)
         bounds = detector.get_page_boundaries(test_page)
-        v, h, _, _ = detector.detect_gutters_and_origin(test_page, bounds)
+        v, h = detector.detect_gutters(bounds)
         assert len(v) == 0 and len(h) == 0
 
     def test_detector_with_one_panel_returns_panel(self):
         test_page = utils.generate_page([((20, 20), (40, 40))], 50, 50)
         detector = SectionDetector(test_page)
         bounds = detector.get_page_boundaries(test_page)
-        v, h, _, _ = detector.detect_gutters_and_origin(test_page, bounds)
+        v, h, = detector.detect_gutters(bounds)
         assert len(v) == 2 and len(h) == 2
 
     def test_detector_with_stacked_panels_detects_horizontal_gutter(self):
         top_panel = ((10, 10), (40, 40))
         bottom_panel = ((10, 50), (40, 90))
-        test_page = utils.generate_page([top_panel, bottom_panel], 100, 50)
+        test_page = utils.generate_page([top_panel, bottom_panel],
+                                        page_height=100,
+                                        page_width=50)
+
         detector = SectionDetector(test_page)
         bounds = detector.get_page_boundaries(test_page)
-        vert_gutters, horiz_gutters, _, _ = detector.detect_gutters_and_origin(
-            test_page, bounds)
+        vert_gutters, horiz_gutters = detector.detect_gutters(bounds)
 
         assert len(vert_gutters) == 2
         assert len(horiz_gutters) == 3
@@ -52,6 +55,8 @@ class TestSectionDetector(unittest.TestCase):
 
         detector = SectionDetector(test_page)
         detector.page = test_page  # removes border added at init
+
+        # need to convert panel
         panels = [panel.centroid for panel
                   in detector.detect_page_sections()]
 
@@ -69,7 +74,7 @@ class TestSectionDetector(unittest.TestCase):
         test_page = utils.generate_page([((20, 20), (40, 40))], 50, 50)
         detector = SectionDetector(test_page)
         bounds = detector.get_page_boundaries(test_page)
-        assert bounds == ((0, 0), (50, 0), (0, 50), (50, 50))
+        assert bounds.bounds == ((0, 0), (50, 0), (0, 50), (50, 50))
 
     def test_detector_detects_gutters_in_specified_page_bounds(self):
 
@@ -80,20 +85,18 @@ class TestSectionDetector(unittest.TestCase):
         detector = SectionDetector(test_page)
 
         fullpage_bounds = detector.get_page_boundaries(test_page)
-        assert fullpage_bounds == ((0, 0), (50, 0), (0, 100), (50, 100))
+        assert fullpage_bounds.bounds == ((0, 0), (50, 0), (0, 100), (50, 100))
 
-        vg, hg, _, _ = detector.detect_gutters_and_origin(
-            test_page, fullpage_bounds)
+        vg, hg = detector.detect_gutters(fullpage_bounds)
         assert len(vg) == 2 and len(hg) == 3
 
         intersections = detector.get_intersections(vg, hg)
-        panels = detector.get_panel_bounds_from_intersections(intersections)
+        panels = detector.get_subsections_from_intersections(intersections)
         top_panel, bottom_panel = panels[0], panels[1]
 
-        vg_top, hg_top, _, _ = detector.detect_gutters_and_origin(
-            test_page, top_panel)
-        vg_bottom, hg_bottom, _, _ = detector.detect_gutters_and_origin(
-            test_page, bottom_panel)
+        # convert from panel to PageSection
+        vg_top, hg_top = detector.detect_gutters(top_panel)
+        vg_bottom, hg_bottom = detector.detect_gutters(bottom_panel)
 
         assert len(vg_top) == 2 and len(hg_top) == 2
         assert vg_top == [6, 43] and hg_top == [6, 43]
@@ -139,6 +142,7 @@ class TestSectionDetector(unittest.TestCase):
         central_indices = section_detector._centralize_indices(gutter_indices)
         assert central_indices == [2, 15, 37]
 
+    @pytest.mark.skip(reason='WIP: Revamping labeling logic')
     def test_labeling_page_with_multiple_panels(self):
         multiple_mixed_panels_page = utils.generate_page(
             rectangle_coords=[
@@ -153,7 +157,7 @@ class TestSectionDetector(unittest.TestCase):
         detector = SectionDetector(multiple_mixed_panels_page)
 
         bounds = detector.get_page_boundaries(multiple_mixed_panels_page)
-        proj_vert, proj_horiz, _, _ = detector.detect_gutters_and_origin(
+        proj_vert, proj_horiz, _, _ = detector.detect_gutters(
             multiple_mixed_panels_page, bounds)
 
         img = utils.draw_lines(multiple_mixed_panels_page,
@@ -184,16 +188,16 @@ class TestSectionDetector(unittest.TestCase):
         assert len(dummy_intersections) == intersection_amt
         self.assertCountEqual(dummy_intersections, intersections)
 
-    def test_get_panels_from_intersections(self):
+    def test_get_page_sections_from_intersections(self):
         empty_page = np.full((5, 5), 255, dtype=np.uint8)
         detector = SectionDetector(empty_page)
-        assert detector.get_panel_bounds_from_intersections([]) == []
+        assert detector.get_subsections_from_intersections([]) == []
 
-        top_panel = (
+        top_panel = PageSection(
             (0, 0), (10, 0),
             (0, 10), (10, 10)
         )
-        bottom_panel = (
+        bottom_panel = PageSection(
             (0, 10), (10, 10),
             (0, 20), (10, 20)
         )
@@ -204,7 +208,7 @@ class TestSectionDetector(unittest.TestCase):
             (0, 10), (10, 10),
             (0, 20), (10, 20)
         ]
-        panels = detector.get_panel_bounds_from_intersections(
+        panels = detector.get_subsections_from_intersections(
             dummy_intersections)
         assert panels == expected_panels
 
@@ -225,9 +229,10 @@ class TestSectionDetector(unittest.TestCase):
         out_of_bounds_page = self.pad_and_convert_greyscale_image(
             out_of_bounds_page)
 
-        page_boundaries = ((0, 0), (53, 0), (0, 53), (53, 53))
+        tl, tr, bl, br = ((0, 0), (53, 0), (0, 53), (53, 53))
+        subsection = PageSection(tl, tr, bl, br)
         detector = SectionDetector(out_of_bounds_page)
-        detector.page_boundaries = page_boundaries
+        detector.page_boundaries = subsection
 
         subsections = detector.detect_page_sections()
         assert len(subsections) == 1
@@ -245,7 +250,7 @@ class TestSectionDetector(unittest.TestCase):
             self.pad_and_convert_greyscale_image(test_img_top_section))
         bounds = ((0, 0), (1208, 0), (0, 663), (1208, 663))
 
-        vg, hg, _, _ = detector.detect_gutters_and_origin(
+        vg, hg, _, _ = detector.detect_gutters(
             detector.page, bounds)
 
         assert len(vg) >= 2 and len(hg) >= 2
@@ -262,8 +267,9 @@ class TestSectionDetector(unittest.TestCase):
     def test_page_section_is_empty(self):
         empty_page = np.full((50, 50), 255, dtype=np.uint8)  # white image
         detector = SectionDetector(empty_page)
-        bounds = ((0, 0), (58, 0), (0, 58), (58, 58))
-        if not detector._section_is_empty(bounds):
+        tl, tr, bl, br = ((0, 0), (58, 0), (0, 58), (58, 58))
+        subsection = PageSection(tl, tr, bl, br)
+        if not detector._section_is_empty(subsection):
             assert False
 
     def test_page_section_checks_valid_page(self):

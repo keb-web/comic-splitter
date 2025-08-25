@@ -3,7 +3,7 @@ from cv2.typing import MatLike
 import numpy as np
 import cv2
 
-from comic_splitter.book import PageSection
+from comic_splitter.page_section import PageSection
 
 
 class Etcher:
@@ -62,7 +62,7 @@ class Etcher:
             (height, width, 3), np.uint8) if blank else page.copy()
 
         for section in rectangles:
-            x, y = section.x_offset, section.y_offset
+            x, y = section.x, section.x
             w, h = section.width, section.height
 
             if mode == 'RECTANGLES':

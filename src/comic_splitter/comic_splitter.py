@@ -42,7 +42,7 @@ class ComicSplitter:
             # section_contents = page.get_section_contents()
 
             for i in range(len(sections)):
-                x, y = sections[i].x_offset, sections[i].y_offset
+                x, y = sections[i].x, sections[i].y
                 detected_panels = self.panel_detector.detect_panels(
                     processsed_section_contents[i], x, y)
                 panels.extend(detected_panels)

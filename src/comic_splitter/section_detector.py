@@ -5,7 +5,7 @@ import numpy as np
 from cv2.typing import MatLike
 from numpy.typing import NDArray
 
-from comic_splitter.book import PageSection
+from comic_splitter.page_section import PageSection
 
 
 class SectionDetector:
@@ -14,16 +14,15 @@ class SectionDetector:
     '''
 
     def __init__(self, page):
-        self._check_page(page)
+        self._verify_page_channel_and_border(page)
         self.page = page
         self.page_boundaries = self.get_page_boundaries(page)
 
-    def _check_page(self, page: MatLike):
+    def _verify_page_channel_and_border(self, page: MatLike):
         if len(page.shape) == 3:
             _, _, channels = page.shape
         else:
             channels = 1
-
         if channels > 1:
             raise Exception('Attempt detection of image with >1')
         elif self._border_exists(page) is False:
@@ -45,72 +44,57 @@ class SectionDetector:
         subsections = []
         st = [self.page_boundaries]
         while st:
-            bounds = st.pop()
-            v_gutters, h_gutters, x, y = self.detect_gutters_and_origin(
-                self.page, bounds)
+            page_subsection = st.pop()
+            v_gutters, h_gutters = self.detect_gutters(page_subsection)
 
-            if (self._single_panel(h_gutters, v_gutters)
-                    and not self._section_is_empty(bounds)):
-                subsections.append(PageSection(bounds, x, y))
+            if (self._single_panel(h_gutters, v_gutters) and
+                    not self._section_is_empty(page_subsection)):
+                subsections.append(page_subsection)
             else:
                 intersections = self.get_intersections(v_gutters, h_gutters)
-                new_bounds = self.get_panel_bounds_from_intersections(
+                new_subsections = self.get_subsections_from_intersections(
                     intersections)
-                st.extend(new_bounds)
-
+                st.extend(new_subsections)
         return subsections
 
     def _single_panel(self, h_gutters, v_gutters):
         return len(v_gutters) == 2 and len(h_gutters) == 2
 
-    def _section_is_empty(self, bounds: tuple, empty_value=255):
-        top_left, top_right, bottom_left, bottom_right = bounds
-        x, y = 0, 1
-
-        min_row = min(top_left[y], top_right[y])
-        max_row = max(bottom_left[y], bottom_right[y])
-        min_col = min(top_left[x], bottom_left[x])
-        max_col = max(top_right[x], bottom_right[x])
-
-        region = self.page[min_row:max_row, min_col:max_col]
+    def _section_is_empty(self, subsection: PageSection, empty_value=255):
+        region = self.page[subsection.get_slice()]
         return np.all(region == empty_value)
 
-    def detect_gutters_and_origin(self, page: MatLike, bounds: tuple):
-        page, x, y = self.get_bounded_page(page, bounds)
+    def detect_gutters(self, subsection: PageSection):
+        x, y = subsection.x, subsection.y
+        page_section = self.page[subsection.get_slice()]
 
-        v_proj = self._get_projection_indices(page, 'vertical')
-        h_proj = self._get_projection_indices(page, 'horizontal')
+        v_proj = self._get_projection_indices(page_section, 'vertical')
+        h_proj = self._get_projection_indices(page_section, 'horizontal')
 
         v_gutters = [gutter + x for gutter in self._centralize_indices(v_proj)
                      if self._within_page_bounds((gutter + x, 0))]
         h_gutters = [gutter + y for gutter in self._centralize_indices(h_proj)
                      if self._within_page_bounds((0, gutter + y))]
 
-        return (v_gutters, h_gutters, x, y)
+        return v_gutters, h_gutters
 
     def _within_page_bounds(self, point):
         x, y = point
-        bottom_right = self.page_boundaries[3]
+        bottom_right = self.page_boundaries.bottom_right
         max_x, max_y = bottom_right[0], bottom_right[1]
         if 0 <= y <= max_y and 0 <= x <= max_x:
             return True
         return False
 
-    def get_page_boundaries(self, page: MatLike) -> tuple:
+    def get_page_boundaries(self, page: MatLike) -> PageSection:
         cols, rows = len(page), len(page[0])
         top_left, top_right = (0, 0), (rows, 0)
         bottom_left, bottom_right = (0, cols), (rows, cols)
-        return (top_left, top_right, bottom_left, bottom_right)
-
-    def get_bounded_page(self, page: MatLike, bounds: tuple):
-        x_values = [bound[0] for bound in bounds]
-        y_values = [bound[1] for bound in bounds]
-        x = min(x_values)
-        y = min(y_values)
-        height = max(y_values) - y
-        width = max(x_values) - x
-        page = page[y: y+height, x: x+width]
-        return page, x, y
+        subsection = PageSection(top_left=top_left,
+                                 top_right=top_right,
+                                 bottom_left=bottom_left,
+                                 bottom_right=bottom_right)
+        return subsection
 
     def _get_projection_indices(
             self, page: MatLike,
@@ -157,11 +141,12 @@ class SectionDetector:
                 ans.append((v, h))
         return ans
 
-    def get_panel_bounds_from_intersections(self, intersections: list[tuple]):
+    def get_subsections_from_intersections(
+            self, intersections: list[tuple]) -> list[PageSection]:
         x = sorted(set([coord[0] for coord in intersections]))
         y = sorted(set([coord[1] for coord in intersections]))
         points = set(intersections)
-        panel_bounds = []
+        subsections = []
 
         for r in range(len(y) - 1):
             panel = []
@@ -175,6 +160,8 @@ class SectionDetector:
                 ]
 
                 if all(p in points for p in panel):
-                    panel_bounds.append(tuple(panel))
+                    tl, tr, bl, br = panel
+                    subsection = PageSection(tl, tr, bl, br)
+                    subsections.append(subsection)
 
-        return panel_bounds
+        return subsections

@@ -7,7 +7,7 @@ import numpy as np
 from cv2.typing import MatLike
 from starlette.datastructures import UploadFile
 
-from comic_splitter.book import PageSection
+from comic_splitter.page_section import PageSection
 
 # TODO: add converstion of bytes to UploadFile Type (found in `test_api.py`)
 
@@ -101,9 +101,10 @@ class PageUtils:
         if len(img.shape) < 3:
             img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
         for section in sections:
+            red = (0, 0, 255)
             tl = section.top_left
             br = section.bottom_right
-            img = cv2.rectangle(img, tl, br, (0, 0, 255), 1)
+            img = cv2.rectangle(img, tl, br, red, 1)
         return img
 
     def show_projection(self, img: np.ndarray,

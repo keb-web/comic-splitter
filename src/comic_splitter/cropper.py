@@ -1,6 +1,6 @@
 import numpy as np
 
-from comic_splitter.book import PageSection
+from comic_splitter.page_section import PageSection
 
 
 class ImageCropper:
@@ -20,7 +20,7 @@ class ImageCropper:
                       section_queue: list[PageSection]) -> list:
         cropped_images = []
         for section in section_queue:
-            x, y = section.x_offset, section.y_offset
+            x, y = section.x, section.y
             width, height = section.width, section.height
             cropped_image = image[y:y+height, x:x+width]
             cropped_images.append(cropped_image)
