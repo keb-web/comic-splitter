@@ -15,7 +15,6 @@ class ImageCropper:
             cropped_images.append(cropped_image)
         return cropped_images
 
-    # TODO: delete
     def _crop_section(self, image: np.ndarray,
                       section_queue: list[PageSection]) -> list:
         cropped_images = []
