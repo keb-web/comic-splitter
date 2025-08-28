@@ -1,3 +1,4 @@
+import base64
 from io import BytesIO
 
 import pytest
@@ -12,6 +13,7 @@ utils = PageUtils()
 
 
 class TestServer:
+
     def test_invalid_filetype_posted_returns_error(self):
         fake_image = BytesIO(b"fake image content")
         data = {'mode': 'crop'}
@@ -21,31 +23,31 @@ class TestServer:
         assert response.status_code == 400
         assert response.json() == {'detail': 'invalid filetype'}
 
-    # TODO: add color scheming so we can verify panels
-    @pytest.mark.skip(reason="fix later")
-    def test_valid_filetype_posted_returns_split_panels_as_pages(self):
+    def data_is_decodable(self, image_data: str):
+        decoded_file = base64.b64decode(image_data)
+        return (isinstance(decoded_file, (bytes, bytearray))
+                and len(decoded_file) > 0)
+
+    def test_server_splits_valid_comic_panel(self):
         top_panel = ((150, 100), (2020, 1444))
         bottom_panel = ((150, 1520), (2020, 2911))
         files = [utils.generate_file_form_data(
             rectangle_coords=[top_panel, bottom_panel])]
-        data = {'mode': 'crop', 'label': False, 'blank': False, 'margin': 0}
-        response = client.post("/split", files=files, data=data)
-        assert response.status_code == 200
+        crop_payload = {'mode': 'crop', 'label': False,
+                        'blank': False, 'margin': 0}
+        etch_payload = {'mode': 'etch', 'label': False,
+                        'blank': False, 'margin': 0}
 
-        data = response.json()
-        assert len(data['images']) == 2
+        crop_response = client.post("/split", files=files, data=crop_payload)
+        etch_response = client.post("/split", files=files, data=etch_payload)
+        payload = crop_response.json()
+        assert crop_response.status_code == 200
+        assert len(payload['images']) == 2
+        assert "images" in payload
+        assert isinstance(payload["images"], list)
+        first_image = payload["images"][0]
+        assert isinstance(first_image, str)
+        assert self.data_is_decodable(first_image)
 
-    @pytest.mark.skip(reason='fix later')
-    def test_valid_filetype_posted_returns_etched_panels_as_pages(self):
-        top_panel = ((150, 100), (2020, 1444))
-        bottom_panel = ((150, 1520), (2020, 2911))
-        files = [utils.generate_file_form_data(
-            rectangle_coords=[top_panel, bottom_panel])]
-        dummy_data = {'mode': 'etch', 'label': False,
-                      'blank': False, 'margin': 0}
-
-        response = client.post("/split", files=files, data=dummy_data)
-        assert response.status_code == 200
-
-        dummy_data = response.json()
-        assert len(dummy_data['images']) == 1
+        payload = etch_response.json()
+        assert len(payload['images']) == 1

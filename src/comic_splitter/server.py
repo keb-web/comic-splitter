@@ -11,8 +11,6 @@ from comic_splitter.config import VALID_FILE_TYPES
 from comic_splitter.file_adapter import FileAdapter
 
 
-# NOTE: rmr to compress image
-
 app = FastAPI()
 
 allowed_origins = [
@@ -28,9 +26,6 @@ app.add_middleware(
 )
 
 
-# TODO: add panel size slider to frontend & feed as parameter to split
-# TODO: add conversion from UploadFile to generic pythonic filetype
-
 @app.post("/split")
 async def split(mode: Literal['crop', 'etch'] = Form('crop'),
                 blank: bool = Form(False),
@@ -40,17 +35,14 @@ async def split(mode: Literal['crop', 'etch'] = Form('crop'),
     _check_valid_file_extension(files)
     options = {'blank': blank, 'label': label,
                'margins': margins, 'mode': mode}
+    file_type = files[0].content_type
 
     adapter = FileAdapter()
     files_as_bytesio = adapter.sources_to_binary_io(files)
-    splitter = ComicSplitter(files_as_bytesio, options)
-    file_type = files[0].content_type
 
+    splitter = ComicSplitter(files_as_bytesio, options)
     panels = await splitter.split()
     panels_as_bytes = encode_panels_to_bytes(panels)
-
-    # if panels is none raise an error
-
     encoded_files = [b64encode(p).decode('utf-8') for p in panels_as_bytes]
     return {'image_type': file_type, 'images': encoded_files}
 
@@ -65,7 +57,6 @@ def _check_valid_file_extension(files: List[UploadFile]):
 def encode_panels_to_bytes(panel_imgs: list[MatLike], format: str = '.jpg'):
     panel_imgs_as_bytes = []
     for img_arr in panel_imgs:
-        # BUG: empty panel_img slices when cropping
         if img_arr is None or img_arr.size == 0:
             print("Skipping empty image")
             continue
