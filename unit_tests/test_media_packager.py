@@ -6,19 +6,8 @@ import zipfile
 from unittest.mock import MagicMock, patch, mock_open
 from comic_splitter.media_packager import MediaPackager
 
-# parent of children that will contain different types of media packagers
-
 
 class TestMediaPackager:
-
-    # def test_packager_returns_nothing_with_no_input(self, mock_imwrite):
-    #     dummy_path = './dummy/path'
-    #     dummy_images = []
-    #
-    #     packager = MediaPackager(dummy_images, dummy_path)
-    #     packager._zip(None)
-    #
-    #     mock_imwrite.assert_not_called()
 
     def test_packager_converts_images_to_bytes(self):
         dummy_images: list[MatLike] = [np.ones((1, 1), dtype=np.uint8),
@@ -40,7 +29,6 @@ class TestMediaPackager:
             packager = MediaPackager(dummy_images, path=tmp_dir)
         zip_buffer = packager._zip(dummy_image_bytes)
         assert zip_buffer is not None
-        # zip_buffer = io.BytesIO(zip_buffer.getvalue())
         with zipfile.ZipFile(zip_buffer, 'r') as zip_file:
             namelist = zip_file.namelist()
             assert '1.jpg' in namelist
