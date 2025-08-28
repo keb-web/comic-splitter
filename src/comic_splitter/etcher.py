@@ -62,7 +62,7 @@ class Etcher:
             (height, width, 3), np.uint8) if blank else page.copy()
 
         for section in rectangles:
-            x, y = section.x, section.x
+            x, y = section.x, section.y
             w, h = section.width, section.height
 
             if mode == 'RECTANGLES':
