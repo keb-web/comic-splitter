@@ -1,4 +1,5 @@
 from io import BytesIO
+import os
 
 import cv2
 from cv2.mat_wrapper import Mat
@@ -49,8 +50,8 @@ class PageBuilder:
             return Mat([])
         return page_content_matlike
 
-    def _preprocess_image(self, processed_page: MatLike) -> np.ndarray:
-        processed_page = cv2.GaussianBlur(processed_page, (9, 9), 0)
+    def _preprocess_image(self, processed_page: MatLike) -> MatLike:
+        processed_page = cv2.GaussianBlur(processed_page, (5, 5), 0)
         processed_page = cv2.threshold(processed_page, 0, 255,
                                        cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
         processed_page = cv2.Canny(processed_page, 30, 200)

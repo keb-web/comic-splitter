@@ -22,10 +22,11 @@ class Page:
         for section in self.sections:
             x, y = section.x, section.y
             height, width = section.height, section.width
+
             # Possible bug. doing y,x for numpy
             # but refactored slice does x, y on PageSectoin
-            section_content = self.processed_content[y:y+height, x:x+width]
 
+            section_content = self.processed_content[y:y+height, x:x+width]
             content_sections.append(section_content)
         return content_sections
 

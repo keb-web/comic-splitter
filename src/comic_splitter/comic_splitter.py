@@ -21,7 +21,7 @@ class ComicSplitter:
         self.book = Book()
         self.cropper = ImageCropper()
         self.etcher = Etcher()
-        self.panel_detector = PanelDetector(margins=options['margins'])
+        self.panel_detector = PanelDetector()
         self.page_builder = PageBuilder(files)
 
     async def split(self) -> list[MatLike]:
@@ -76,11 +76,10 @@ class ComicSplitter:
                 )
 
                 # NOTE: testing sections are properly detected
-                # panel_imgs.append(
-                # self.etcher._etch_section(page=page.get_content(),
-                #                           rectangles=page.get_sections(),
-                #                           label=self.options['label'],
-                #                           blank=self.options['blank']
-                #                           )
-                # )
+                # panel_imgs.append(self.etcher._etch_section(
+                #     page=page.get_content(),
+                #     rectangles=page.get_sections(),
+                #     label=self.options['label'],
+                #     blank=self.options['blank']
+                # ))
         return panel_imgs

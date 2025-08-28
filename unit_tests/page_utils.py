@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import os
 from io import BytesIO
 
@@ -10,6 +11,30 @@ from starlette.datastructures import UploadFile
 from comic_splitter.page_section import PageSection
 
 # TODO: add converstion of bytes to UploadFile Type (found in `test_api.py`)
+
+
+@dataclass
+class RectUtil:
+    x: int
+    y: int
+    width: int
+    height: int
+
+    def __post_init__(self):
+        self.area = self.width * self.height
+        self.tl = (self.x, self.y)
+        self.tr = (self.x + self.width, self.y)
+        self.bl = (self.x, self.y + self.height)
+        self.br = (self.x + self.width, self.y + self.height)
+        self.contour = (self.x, self.y, self.width, self.height)
+        self.centroid = self._centroid((self.x, self.y),
+                                       (self.x + self.width,
+                                        self.y+self.height))
+
+    def _centroid(self, top_left, bottom_right) -> tuple[int, int]:
+        x1, y1 = top_left
+        x2, y2 = bottom_right
+        return ((x1+x2)/2, (y1+y2)/2)
 
 
 class PageUtils:
@@ -56,16 +81,26 @@ class PageUtils:
         #                   color=color, thickness=thickness)
         return page
 
-    # def generate_polygonal_page(self, coords: NDArray, fill: bool = True,
-    #                   page_height: int = 3035, page_width: int = 2150,
-    #                   color: tuple = (0, 0, 0), thickness: int = 5):
-    #     page = np.ones((page_height, page_width), dtype=np.uint8) * 255
-    #     polygons = coords.reshape((-1, 3, 2))
-    #     for poly in polygons:
-    #         poly = poly.reshape((-1, 1, 2))
-    #         cv2.polylines(page, [poly], isClosed=fill,
-    #                       color=color, thickness=thickness)
-    #     return page
+    def preprocess_image(self, image):
+        processed_page = cv2.GaussianBlur(image, (9, 9), 0)
+        processed_page = cv2.threshold(processed_page, 0, 255,
+                                       cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+        processed_page = cv2.Canny(processed_page, 30, 200)
+        processed_page = cv2.bitwise_not(processed_page)
+        return processed_page
+
+    def generate_page_from_rects(self, rectangles: list[RectUtil],
+                                 page_height: int = 500,
+                                 page_width: int = 300,
+                                 border_color: tuple = (0, 0, 0),
+                                 thickness: int = 10):
+
+        page = np.ones((page_height, page_width), dtype=np.uint8) * 255
+        for rect in rectangles:
+            cv2.rectangle(page, rect.tl, rect.br,
+                          color=border_color, thickness=thickness)
+        # return self.preprocess_image(page)
+        return page
 
     def draw_labels(self, img: np.ndarray, contours):
         page = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
