@@ -24,7 +24,7 @@ class SectionDetector:
         else:
             channels = 1
         if channels > 1:
-            raise Exception('Attempt detection of image with >1')
+            raise Exception('Attempt detection of image with >1 channel')
         elif self._border_exists(page) is False:
             raise Exception('Attempt detection of image without padding')
 
@@ -46,6 +46,8 @@ class SectionDetector:
         while st:
             page_subsection = st.pop()
             v_gutters, h_gutters = self.detect_gutters(page_subsection)
+            if v_gutters == [] and h_gutters == []:
+                return [page_subsection]
 
             if (self._single_panel(h_gutters, v_gutters) and
                     not self._section_is_empty(page_subsection)):

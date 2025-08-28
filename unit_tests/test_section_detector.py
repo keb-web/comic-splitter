@@ -15,24 +15,45 @@ utils = PageUtils()
 
 class TestSectionDetector(unittest.TestCase):
 
-    def test_detector_with_no_panels(self):
-        test_page = utils.generate_page([], 50, 50)
+    def test_detector_detects_whole_page_when_no_sections_given(self):
+        test_page = utils.generate_page(rectangle_coords=[],
+                                        page_height=50, page_width=50)
         detector = SectionDetector(test_page)
-        bounds = detector.get_page_boundaries(test_page)
-        v, h = detector.detect_gutters(bounds)
-        assert len(v) == 0 and len(h) == 0
+        sections = detector.detect_page_sections()
+        assert len(sections) == 1
 
-    def test_detector_with_one_panel_returns_panel(self):
-        test_page = utils.generate_page([((20, 20), (40, 40))], 50, 50)
+    def centroid_within_panel_coords(self, centroid, panel):
+        x_cen, y_cen = centroid
+        x_min, y_min = panel[0]
+        x_max, y_max = panel[1]
+        return x_min < x_cen < x_max and y_min < y_cen < y_max
+
+    def test_detector_finds_page_section(self):
+        panel_coord = ((10, 10), (40, 40))
+        test_page = utils.generate_page(rectangle_coords=[panel_coord],
+                                        page_height=50, page_width=50,
+                                        thickness=2)
         detector = SectionDetector(test_page)
-        bounds = detector.get_page_boundaries(test_page)
-        v, h, = detector.detect_gutters(bounds)
-        assert len(v) == 2 and len(h) == 2
+
+        sections = detector.detect_page_sections()
+        assert len(sections) == 1
+        assert self.centroid_within_panel_coords(
+            sections[0].centroid, panel_coord)
+
+    def gutter_not_in_panel_bounds(
+            self, gutter: int, panels: list[tuple], vertical: bool = True):
+        for (x1, y1), (x2, y2) in panels:
+            if vertical and x1 < gutter < x2:
+                return False
+            if not vertical and y1 <= gutter <= y2:
+                return False
+        return True
 
     def test_detector_with_stacked_panels_detects_horizontal_gutter(self):
         top_panel = ((10, 10), (40, 40))
         bottom_panel = ((10, 50), (40, 90))
-        test_page = utils.generate_page([top_panel, bottom_panel],
+        panels = [top_panel, bottom_panel]
+        test_page = utils.generate_page(panels,
                                         page_height=100,
                                         page_width=50)
 
@@ -42,6 +63,11 @@ class TestSectionDetector(unittest.TestCase):
 
         assert len(vert_gutters) == 2
         assert len(horiz_gutters) == 3
+        for gutter in vert_gutters:
+            assert self.gutter_not_in_panel_bounds(gutter, panels)
+        for gutter in horiz_gutters:
+            assert self.gutter_not_in_panel_bounds(
+                gutter, panels, vertical=False)
 
     def test_detector_detects_subpanels(self):
         top_panel_left = ((10, 10), (18, 40))
@@ -142,31 +168,6 @@ class TestSectionDetector(unittest.TestCase):
         central_indices = section_detector._centralize_indices(gutter_indices)
         assert central_indices == [2, 15, 37]
 
-    @pytest.mark.skip(reason='WIP: Revamping labeling logic')
-    def test_labeling_page_with_multiple_panels(self):
-        multiple_mixed_panels_page = utils.generate_page(
-            rectangle_coords=[
-                ((1406, 100), (2100, 1515)),   # top_right_panel
-                ((100, 100), (1306, 807)),     # top_left_panel
-                ((100, 857), (500, 1515)),     # bottom_left_panel_1
-                ((550, 857), (950, 1515)),     # bottom_left_panel_2
-                ((1000, 857), (1306, 1515)),   # bottom_left_panel_3
-                ((100, 1615), (2100, 2935))    # bottom_full_width_panel
-            ]
-        )
-        detector = SectionDetector(multiple_mixed_panels_page)
-
-        bounds = detector.get_page_boundaries(multiple_mixed_panels_page)
-        proj_vert, proj_horiz, _, _ = detector.detect_gutters(
-            multiple_mixed_panels_page, bounds)
-
-        img = utils.draw_lines(multiple_mixed_panels_page,
-                               horiz_lines=proj_horiz, vert_lines=proj_vert)
-        utils.save_image(img, 'test')
-
-        assert len(proj_vert) == 2
-        assert len(proj_horiz) == 3
-
     def test_get_no_intersection_between_nonexistent_gutters(self):
         vert, horiz = [], []
         detector = SectionDetector(np.full((5, 5), 255, dtype=np.uint8))
@@ -202,15 +203,34 @@ class TestSectionDetector(unittest.TestCase):
             (0, 20), (10, 20)
         )
         expected_panels = [top_panel, bottom_panel]
-
         dummy_intersections = [
             (0, 0), (10, 0),
             (0, 10), (10, 10),
             (0, 20), (10, 20)
         ]
+
         panels = detector.get_subsections_from_intersections(
             dummy_intersections)
         assert panels == expected_panels
+
+    def test_detector_identifies_empty_section(self):
+        empty_page = np.full((50, 50), 255, dtype=np.uint8)  # white image
+        detector = SectionDetector(empty_page)
+        tl, tr, bl, br = ((0, 0), (58, 0), (0, 58), (58, 58))
+        subsection = PageSection(tl, tr, bl, br)
+        if not detector._section_is_empty(subsection):
+            assert False
+
+    def test_page_section_raises_exception_if_given_invalid_page(self):
+        height, width, channels = 50, 50, 3
+        color_image = np.ones((height, width, channels), dtype=np.uint8)
+        unpadded_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
+
+        with self.assertRaisesRegex(Exception, 'image with >1 channel'):
+            SectionDetector(color_image)
+
+        with self.assertRaisesRegex(Exception, 'image without padding'):
+            SectionDetector(unpadded_image)
 
     def pad_and_convert_greyscale_image(self, image: MatLike):
         if len(image.shape) == 3:
@@ -228,90 +248,26 @@ class TestSectionDetector(unittest.TestCase):
             page_height=45, page_width=45)
         out_of_bounds_page = self.pad_and_convert_greyscale_image(
             out_of_bounds_page)
-
         tl, tr, bl, br = ((0, 0), (53, 0), (0, 53), (53, 53))
         subsection = PageSection(tl, tr, bl, br)
         detector = SectionDetector(out_of_bounds_page)
         detector.page_boundaries = subsection
 
         subsections = detector.detect_page_sections()
+
         assert len(subsections) == 1
+        assert self.centroid_within_panel_coords(
+            subsections[0].centroid, out_of_bounds_panel)
 
-    @pytest.mark.skip(reason='fixing contour bug first')
     def test_gutter_detection_with_real_image(self):
-
         test_path = os.path.dirname(os.path.abspath(__file__))
         img_path = os.path.join(test_path, "assets", 'real_gutter_test.jpg')
+
         test_img = cv2.imread(img_path)
+        if test_img is None:
+            raise FileNotFoundError
+        test_img = self.pad_and_convert_greyscale_image(test_img)
+        detector = SectionDetector(test_img)
 
-        test_img_top_section = test_img[0: 655]
-
-        detector = SectionDetector(
-            self.pad_and_convert_greyscale_image(test_img_top_section))
-        bounds = ((0, 0), (1208, 0), (0, 663), (1208, 663))
-
-        vg, hg, _, _ = detector.detect_gutters(
-            detector.page, bounds)
-
-        assert len(vg) >= 2 and len(hg) >= 2
-
-        detector = SectionDetector(
-            self.pad_and_convert_greyscale_image(test_img))
         subpanels = detector.detect_page_sections()
-
-        # img = utils.draw_page_sections(detector.page, subpanels)
-        # utils.save_image(img, 'test_img')
-
-        assert len(subpanels) == 3
-
-    def test_page_section_is_empty(self):
-        empty_page = np.full((50, 50), 255, dtype=np.uint8)  # white image
-        detector = SectionDetector(empty_page)
-        tl, tr, bl, br = ((0, 0), (58, 0), (0, 58), (58, 58))
-        subsection = PageSection(tl, tr, bl, br)
-        if not detector._section_is_empty(subsection):
-            assert False
-
-    def test_page_section_checks_valid_page(self):
-        height, width, channels = 50, 50, 3
-        color_image = np.ones((height, width, channels), dtype=np.uint8)
-        unpadded_image = cv2.cvtColor(color_image, cv2.COLOR_BGR2GRAY)
-
-        with self.assertRaisesRegex(Exception, 'image with >1'):
-            SectionDetector(color_image)
-
-        with self.assertRaisesRegex(Exception, 'image without padding'):
-            SectionDetector(unpadded_image)
-
-    # @pytest.mark.skip(reason='testing hybrid detection approach first')
-    # def test_detector_with_sloped_gutters_detects_gutterline(self):
-        # coords = np.array([
-        #     [20, 20], [20, 50], [40, 20],         # triangle1
-        #     [20, 480], [140, 20], [280, 480],     # triangle2
-        #     [160, 20], [220, 20], [300, 480]       # triangle3
-        # ], np.int32)
-        # sloped_panel_page = utils.generate_polygonal_page(
-        #     coords, page_height=500, page_width=320)
-        #
-        # detector = SectionDetector(sloped_panel_page)
-        # bounds = detector.get_page_boundaries(sloped_panel_page)
-        # v, h, _, _ = detector.detect_gutters_and_origin(
-        #     sloped_panel_page, bounds[0])
-        #
-        # img = utils.draw_lines(
-        # sloped_panel_page, horiz_lines=h, vert_lines=v)
-        # utils.save_image(img)
-        #
-        # assert len(h) == 2
-        # assert len(v) == 1
-
-        # @pytest.mark.skip(reason='need to add slope attrib to gutter')
-        # def test_get_intersection_between_sloped_vert_horiz_gutters(self):
-        #     pass
-        # nested
-        # out of bounds
-        # polygonal
-        # gaps
-        # no gutters
-        # inverse colors
-        # full spread
+        assert len(subpanels) == 5
