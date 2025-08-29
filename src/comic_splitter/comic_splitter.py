@@ -16,13 +16,15 @@ from comic_splitter.panel_detector import PanelDetector
 
 class ComicSplitter:
 
-    def __init__(self, files: list[BytesIO], options: dict):
+    def __init__(self, files: list[BytesIO], options: dict,
+                 book=None, cropper=None, etcher=None,
+                 panel_detector=None, page_builder=None):
         self.options = options
-        self.book = Book()
-        self.cropper = ImageCropper()
-        self.etcher = Etcher()
-        self.panel_detector = PanelDetector()
-        self.page_builder = PageBuilder(files)
+        self.book = book or Book()
+        self.cropper = cropper or ImageCropper()
+        self.etcher = etcher or Etcher()
+        self.panel_detector = panel_detector or PanelDetector()
+        self.page_builder = page_builder or PageBuilder(files)
 
     async def split(self) -> list[MatLike]:
         await self._get_book_data_from_bytes()
@@ -39,7 +41,6 @@ class ComicSplitter:
             panels = []
             sections = page.get_sections()
             processsed_section_contents = page.get_processed_section_content()
-            # section_contents = page.get_section_contents()
 
             for i in range(len(sections)):
                 x, y = sections[i].x, sections[i].y
