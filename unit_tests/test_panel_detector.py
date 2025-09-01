@@ -34,8 +34,9 @@ class TestPanelDetector():
         detector = PanelDetector()
         detected_panels = detector.detect_panels(page_section=dummy_page,
                                                  x_offset=0, y_offset=0)
-
-        assert detected_panels == [pytest.approx(panel.contour, abs=10.0)]
+        assert len(detected_panels) == 1
+        assert (detected_panels[0].get_rect()
+                == pytest.approx(panel.contour, abs=10.0))
 
     def test_panel_detection_removes_small_detected_panels(self):
         big_panel = ((150, 100), (2000, 2750))
@@ -45,7 +46,7 @@ class TestPanelDetector():
         detector = PanelDetector(6000)
         panels = detector.detect_panels(page, x_offset=0, y_offset=0)
         assert len(panels) == 1
-        assert panels[0] == pytest.approx(
+        assert panels[0].get_rect() == pytest.approx(
             self.to_bounding_rect(big_panel), abs=10.0)
 
     def test_detector_detects_out_of_bounds_panel(self):
@@ -67,7 +68,7 @@ class TestPanelDetector():
         detector = PanelDetector()
         panels = detector.detect_panels(page_with_gap, x_offset=0, y_offset=0)
         assert len(panels) == 2
-        assert panels[0] == pytest.approx(
+        assert panels[0].get_rect() == pytest.approx(
             self.to_bounding_rect(panel_with_large_gap), abs=10.0)
-        assert panels[1] == pytest.approx(
+        assert panels[1].get_rect() == pytest.approx(
             self.to_bounding_rect(panel_with_small_gap), abs=10.0)

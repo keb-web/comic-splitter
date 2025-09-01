@@ -4,6 +4,8 @@ import cv2
 import numpy as np
 from cv2.typing import MatLike
 
+from comic_splitter.page import Panel
+
 
 class PanelDetector:
     '''
@@ -15,12 +17,13 @@ class PanelDetector:
         self.min_panel_area = min_panel_area
 
     def detect_panels(self, page_section: MatLike,
-                      x_offset: int, y_offset: int) -> list[tuple]:
+                      x_offset: int, y_offset: int) -> list[Panel]:
         if page_section.size == 0:
             return []
         contours = self.get_contours(page_section)
         rects = self.get_bounding_rects(contours, x_offset, y_offset)
-        return rects
+        panels = [Panel(*rect) for rect in rects]
+        return panels
 
     def get_contours(self, page_section: MatLike) -> list[np.ndarray]:
         page_section = cv2.bitwise_not(page_section)

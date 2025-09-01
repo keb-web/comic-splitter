@@ -1,5 +1,19 @@
+from dataclasses import dataclass, field
 from cv2.typing import MatLike
 from comic_splitter.page_section import PageSection
+
+
+@dataclass
+class Panel:
+    x: int
+    y: int
+    width: int
+    height: int
+    # rtl_idx: int = field(init=False)
+    # ltr_indx: int = field(init=False)
+
+    def get_rect(self) -> tuple:
+        return (self.x, self.y, self.width, self.height)
 
 
 class Page:
@@ -39,14 +53,14 @@ class Page:
             content_sections.append(section_content)
         return content_sections
 
-    def get_panels(self) -> list[tuple]:
+    def get_panels(self) -> list[Panel]:
         return self.panels
 
-    def set_panels(self, panels: list[tuple]) -> None:
+    def set_panels(self, panels: list[Panel]) -> None:
         self.panels = panels  # panel coutour coordinates. TODO: encapsulate
 
-    def add_panel(self, panel: tuple) -> None:
+    def add_panel(self, panel: Panel) -> None:
         self.panels.append(panel)
 
-    def extend_panels(self, panels: list[tuple]) -> None:
+    def extend_panels(self, panels: list[Panel]) -> None:
         self.panels.extend(panels)

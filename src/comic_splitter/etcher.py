@@ -3,12 +3,13 @@ from cv2.typing import MatLike
 import numpy as np
 import cv2
 
+from comic_splitter.page import Panel
 from comic_splitter.page_section import PageSection
 
 
 class Etcher:
 
-    def etch(self, page: MatLike, rectangles: list[tuple],
+    def etch(self, page: MatLike, panels: list[Panel],
              label: bool = False, blank: bool = False,
              mode: Literal["BORDER", "RECTANGLES"] = "BORDER") -> MatLike:
 
@@ -23,7 +24,8 @@ class Etcher:
         colors = [red, blue, green]
 
         color_picker = 0
-        for (x, y, w, h) in rectangles:
+        for panel in panels:
+            (x, y, w, h) = panel.get_rect()
             if color_picker == 3:
                 color_picker = 0
             if mode == 'RECTANGLES':
@@ -35,13 +37,14 @@ class Etcher:
             color_picker += 1
 
         if label:
-            self.draw_label_contours(canvas, rectangles)
+            self.draw_label_contours(canvas, panels)
 
         return canvas
 
-    def draw_label_contours(self, page: MatLike, rects: list):
-        for i, r in enumerate(rects):
-            x, y, w, h = r
+    def draw_label_contours(self, page: MatLike,
+                            bounds: list[Panel] | list[PageSection]):
+        for i, bound in enumerate(bounds):
+            x, y, w, h = bound.get_rect()
             center_x = x + w // 2
             center_y = y + h // 2
 

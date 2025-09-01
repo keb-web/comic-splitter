@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 
 from comic_splitter.etcher import Etcher
+from comic_splitter.page import Panel
 from comic_splitter.page_section import PageSection
 
 
@@ -22,6 +23,6 @@ class TestEtcher:
 
     @pytest.mark.parametrize("mode", ["BORDER", "RECTANGLES"])
     def test_etch_draws_rectangle_bounds(self, mode, dummy_page):
-        rects = (10, 10, 20, 20)
-        result = self.etcher.etch(dummy_page, [rects], mode=mode)
+        panel = Panel(10, 10, 20, 20)
+        result = self.etcher.etch(dummy_page, [panel], mode=mode)
         assert tuple(result[10, 10]) != (0, 0, 0)

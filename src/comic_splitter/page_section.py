@@ -39,6 +39,9 @@ class PageSection:
         # np[y, x]
         return self.slice_y, self.slice_x
 
+    def get_rect(self) -> tuple:
+        return (self.slice_x, self.slice_y, self.width, self.height)
+
     def _centroid(self) -> tuple[int, int]:
         x1, y1 = self.top_left
         x2, y2 = self.bottom_right

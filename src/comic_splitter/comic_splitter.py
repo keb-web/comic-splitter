@@ -5,6 +5,7 @@ from cv2.typing import MatLike
 from comic_splitter.book import Book, Page
 from comic_splitter.cropper import ImageCropper
 from comic_splitter.etcher import Etcher
+from comic_splitter.page import Panel
 from comic_splitter.page_builder import PageBuilder
 from comic_splitter.panel_detector import PanelDetector
 
@@ -71,7 +72,7 @@ class ComicSplitter:
                 # NOTE: Default contour-based implementation
                 panel_imgs.append(
                     self.etcher.etch(page=page.get_content(),
-                                     rectangles=page.get_panels(),
+                                     panels=page.get_panels(),
                                      label=self.options['label'],
                                      blank=self.options['blank'])
                 )

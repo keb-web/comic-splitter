@@ -1,5 +1,6 @@
 import numpy as np
 from comic_splitter.cropper import ImageCropper
+from comic_splitter.page import Panel
 from comic_splitter.page_section import PageSection
 from .page_utils import PageUtils
 
@@ -16,7 +17,7 @@ class TestCropper:
         assert self.cropper.crop(np.ndarray((0, 0)), indexed_panels) == []
 
     def test_crop_multiple_panels(self):
-        crop_queue = [(0, 0, 50, 50), (100, 100, 50, 50)]
+        crop_queue = [Panel(0, 0, 50, 50), Panel(100, 100, 50, 50)]
         result = self.cropper.crop(self.page, crop_queue)
         assert len(result) == 2
         assert result[0].shape == (50, 50)
