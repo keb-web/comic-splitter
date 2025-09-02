@@ -1,5 +1,4 @@
 from io import BytesIO
-import os
 
 import cv2
 from cv2.mat_wrapper import Mat

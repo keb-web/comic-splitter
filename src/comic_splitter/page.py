@@ -1,19 +1,7 @@
-from dataclasses import dataclass, field
 from cv2.typing import MatLike
+
 from comic_splitter.page_section import PageSection
-
-
-@dataclass
-class Panel:
-    x: int
-    y: int
-    width: int
-    height: int
-    # rtl_idx: int = field(init=False)
-    # ltr_indx: int = field(init=False)
-
-    def get_rect(self) -> tuple:
-        return (self.x, self.y, self.width, self.height)
+from comic_splitter.panel import Panel
 
 
 class Page:
