@@ -15,9 +15,7 @@ class Panel:
         self.centroid = self._centroid()
 
     def get_idx(self, dir: Literal['RTL', 'LTR'] = 'RTL'):
-        if hasattr(self, 'rtl_idx') or hasattr(self, 'ltr_idx'):
-            return self.rtl_idx if dir == 'RTL' else self.ltr_idx
-        raise AttributeError('Panel index has not been set')
+        return self.rtl_idx if dir == 'RTL' else self.ltr_idx
 
     def set_idx(self, dir: Literal['RTL', 'LTR'], idx: int):
         if dir == 'RTL':

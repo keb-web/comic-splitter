@@ -5,15 +5,6 @@ from comic_splitter.page import Panel
 from comic_splitter.panel_labeler import PanelLabeler
 
 
-class TestPanel():
-
-    def test_raise_error_when_getting_missing_panel_idx(self):
-        dummy_panel = Panel(0, 0, 0, 0)
-        with pytest.raises(AttributeError,
-                           match="Panel index has not been set"):
-            dummy_panel.get_idx()
-
-
 class TestPanelLabeler():
 
     def test_return_empty_list_given_no_panels(self):
