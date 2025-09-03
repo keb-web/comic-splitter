@@ -14,29 +14,35 @@ from comic_splitter.page import Panel
 
 class PanelLabeler():
     def __init__(self, direction: Literal['RTL', 'LTR'] = 'RTL'):
-        self.direction = direction
+        self.direction: Literal['RTL', 'LTR'] = direction
 
     def label(self, panels: list[Panel]):
         if panels == []:
             return panels
         starting_panel = self._get_starting_panel(panels)
-        self._get_relative_distances(panels, starting_panel)
+        distance_log = self._get_relative_distances(panels, starting_panel)
+        distances = [dist for dist in distance_log.keys()]
+        distances.sort()
+        for i, dist in enumerate(distances):
+            distance_log[dist].set_idx(self.direction, i+1)
 
     def _get_starting_panel(self, panels: list[Panel]) -> Panel:
         starting_panel = Panel(-1, -1, 0, 0)
         if self.direction == 'RTL':
-            starting_panel = max(panels, key=lambda panel: (panel.x, -panel.y))
+            starting_panel = max(panels,
+                                 key=lambda panel: (panel.x, -panel.y))
         if self.direction == 'LTR':
-            starting_panel = max(panels, key=lambda panel: (-panel.x, panel.y))
+            starting_panel = max(panels,
+                                 key=lambda panel: (-panel.x, -panel.y))
         return starting_panel
 
     def _get_relative_distances(self, panels: list[Panel],
-                                starting_panel: Panel) -> dict[Panel, float]:
-        distances = {}
-        origin = (starting_panel.x, starting_panel.y)
+                                starting_panel: Panel) -> dict[float, Panel]:
+        distance = {}
         for panel in panels:
-            distances[panel] = self._distance((panel.x, panel.y), origin)
-        return distances
+            rel_dist = self._distance(panel.centroid, starting_panel.centroid)
+            distance[rel_dist] = panel
+        return distance
 
     def _distance(self, p1, p2):
         x1, y1 = p1

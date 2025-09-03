@@ -52,9 +52,9 @@ class TestPanelLabeler():
         labeler = PanelLabeler(dir)
         labeler.label(panels)
 
-        assert len(panels) == 3
+        assert len(panels) == 2
         sorted_indices = [p.get_idx(dir) for p in panels]
-        assert sorted_indices == [1, 2, 3]
+        assert sorted_indices == [1, 2]
 
     @pytest.mark.parametrize('dir, panel', [('RTL', (25, 25)),
                                             ('LTR', (0, 0))])
@@ -67,11 +67,11 @@ class TestPanelLabeler():
         assert (starting_panel.x, starting_panel.y) == panel
 
     def distance(self, p1, p2):
-        x1, y1 = p1.x, p1.y
-        x2, y2 = p2.x, p2.y
+        x1, y1 = p1.centroid
+        x2, y2 = p2.centroid
         return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
-    def test_labeler_identifies_panel_distance(self):
+    def test_labeler_identifies_distance_between_panels(self):
         left_panel = Panel(x=5, y=5, width=25, height=25)
         middle_panel = Panel(x=30, y=5, width=25, height=25)
         right_panel = Panel(x=60, y=5, width=25, height=25)
@@ -83,7 +83,7 @@ class TestPanelLabeler():
                                                starting_panel=starting_panel)
 
         assert dist == {
-            left_panel: self.distance(left_panel, starting_panel),
-            middle_panel: self.distance(middle_panel, starting_panel),
-            right_panel: self.distance(right_panel, starting_panel)
+            self.distance(left_panel, starting_panel): left_panel,
+            self.distance(middle_panel, starting_panel): middle_panel,
+            self.distance(right_panel, starting_panel): right_panel
         }
