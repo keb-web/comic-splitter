@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Literal
 
 
@@ -8,8 +8,8 @@ class Panel:
     y: int
     width: int
     height: int
-    rtl_idx: int = field(init=False)
-    ltr_idx: int = field(init=False)
+    rtl_idx: int = -1
+    ltr_idx: int = -1
 
     def get_idx(self, dir: Literal['RTL', 'LTR'] = 'RTL'):
         if hasattr(self, 'rtl_idx') or hasattr(self, 'ltr_idx'):
@@ -24,3 +24,14 @@ class Panel:
 
     def get_rect(self) -> tuple:
         return (self.x, self.y, self.width, self.height)
+
+    def get_edge_ref(self, dir: Literal['RTL', 'LTR'] = 'RTL'):
+        if dir == 'RTL':
+            top_right_point = (self.x + self.width, self.y)
+            return top_right_point
+        else:
+            top_left_point = (self.x, self.y)
+            return top_left_point
+
+    def __hash__(self):
+        return hash((self.x, self.y))
