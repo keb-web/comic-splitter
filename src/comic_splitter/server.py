@@ -67,3 +67,4 @@ def encode_panels_to_bytes(panel_imgs: list[MatLike], format: str = '.jpg'):
         panel_imgs_as_bytes.append(img_bytes)
 
     return panel_imgs_as_bytes
+

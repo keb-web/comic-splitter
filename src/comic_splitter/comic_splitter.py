@@ -36,7 +36,6 @@ class ComicSplitter:
             panels = []
             sections = page.get_sections()
             processsed_section_contents = page.get_processed_section_content()
-
             for i in range(len(sections)):
                 x, y = sections[i].x, sections[i].y
                 detected_panels = self.panel_detector.detect_panels(

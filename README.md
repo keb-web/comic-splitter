@@ -18,7 +18,7 @@ pyproject.toml initial setup
 
 ## Run as Module
 
-**in src/**
+**in src/**  
 _Single Image_
 `python -m comic_splitter -i ../unit_tests/assets/test_page_multiple_panels.jpg`
 _Directory of Valid Files_

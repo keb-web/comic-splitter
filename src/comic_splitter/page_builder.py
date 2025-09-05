@@ -1,8 +1,8 @@
+import numpy as np
 from io import BytesIO
 
 import cv2
 from cv2.mat_wrapper import Mat
-import numpy as np
 from cv2.typing import MatLike
 
 from comic_splitter.book import Page
@@ -53,6 +53,7 @@ class PageBuilder:
         processed_page = cv2.GaussianBlur(processed_page, (5, 5), 0)
         processed_page = cv2.threshold(processed_page, 0, 255,
                                        cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-        processed_page = cv2.Canny(processed_page, 30, 200)
-        processed_page = cv2.bitwise_not(processed_page)
+        # kernel = np.ones((3, 3), np.uint8)
+        # processed_page = cv2.morphologyEx(
+        #     processed_page, cv2.MORPH_CLOSE, kernel)
         return processed_page

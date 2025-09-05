@@ -1,3 +1,4 @@
+import json
 from cv2.typing import MatLike
 
 from comic_splitter.page_section import PageSection
@@ -25,9 +26,6 @@ class Page:
             x, y = section.x, section.y
             height, width = section.height, section.width
 
-            # Possible bug. doing y,x for numpy
-            # but refactored slice does x, y on PageSectoin
-
             section_content = self.processed_content[y:y+height, x:x+width]
             content_sections.append(section_content)
         return content_sections
@@ -45,10 +43,17 @@ class Page:
         return self.panels
 
     def set_panels(self, panels: list[Panel]) -> None:
-        self.panels = panels  # panel coutour coordinates. TODO: encapsulate
+        self.panels = panels
 
     def add_panel(self, panel: Panel) -> None:
         self.panels.append(panel)
 
     def extend_panels(self, panels: list[Panel]) -> None:
         self.panels.extend(panels)
+
+    def to_json(self, content_path: str):
+        return {
+            'page_number': self.page_number,
+            'content': content_path + f'/pg-{self.page_number}',
+            'panels': [panel.__dict__ for panel in self.panels]
+        }

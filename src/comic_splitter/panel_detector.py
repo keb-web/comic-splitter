@@ -20,6 +20,11 @@ class PanelDetector:
                       x_offset: int, y_offset: int) -> list[Panel]:
         if page_section.size == 0:
             return []
+        # old contour-based approach
+        # project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        # save_path = os.path.join(project_root, 'test_file.jpg')
+        # cv2.imwrite(save_path, page_section)
+
         contours = self.get_contours(page_section)
         rects = self.get_bounding_rects(contours, x_offset, y_offset)
         panels = [Panel(*rect) for rect in rects]
