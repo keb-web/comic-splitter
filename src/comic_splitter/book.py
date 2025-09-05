@@ -1,5 +1,4 @@
 from comic_splitter.page import Page
-from comic_splitter.config import MEDIA_PATH
 
 
 class Book:
@@ -26,12 +25,9 @@ class Book:
         author = self.metadata['author'].lower().strip()
         title = self.metadata['title'].lower().strip()
         chapter = self.metadata['chapter'].lower().strip()
-        content_path = (
-            MEDIA_PATH + '/' + title + '-' + author + f'/ch-{chapter}')
         return {
             'author': author,
             'title': title,
             'chapter': chapter,
-            'content': content_path,
-            'pages': [page.to_json(content_path) for page in self.pages],
+            'pages': [page.to_json() for page in self.pages],
         }

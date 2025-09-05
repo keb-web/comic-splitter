@@ -1,4 +1,3 @@
-import json
 from cv2.typing import MatLike
 
 from comic_splitter.page_section import PageSection
@@ -51,9 +50,8 @@ class Page:
     def extend_panels(self, panels: list[Panel]) -> None:
         self.panels.extend(panels)
 
-    def to_json(self, content_path: str):
+    def to_json(self):
         return {
             'page_number': self.page_number,
-            'content': content_path + f'/pg-{self.page_number}',
             'panels': [panel.__dict__ for panel in self.panels]
         }

@@ -32,12 +32,10 @@ class TestComicSerializer(unittest.TestCase):
         page = Page(content=MagicMock(), processed_content=MagicMock(),
                     sections=[], page_number=1)
         page.set_panels([panel])
-        json = page.to_json(content_path='media')
+        json = page.to_json()
         assert json['page_number'] == 1
-        assert json['content'] == 'media/pg-1'
         assert len(json['panels']) == 1
 
-    @mock.patch('comic_splitter.book.MEDIA_PATH', new='/media')
     def test_serializer_returns_book_data_as_json(self):
         panel_left = Panel(x=5, y=5, width=20, height=30,
                            rtl_idx=2, ltr_idx=1)
@@ -61,11 +59,9 @@ class TestComicSerializer(unittest.TestCase):
                 'author': 'dummy-author',
                 'title': 'dummy-comic',
                 'chapter': '1',
-                'content': '/media/dummy-comic-dummy-author/ch-1',
                 'pages': [
                     {
                         'page_number': 1,
-                        'content': '/media/dummy-comic-dummy-author/ch-1/pg-1',
                         'panels': [
                             {
                                 'x': 5,
