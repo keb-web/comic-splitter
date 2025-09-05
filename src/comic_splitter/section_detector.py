@@ -14,7 +14,7 @@ class SectionDetector:
     '''
 
     def __init__(self, page):
-        self._verify_page_channel_and_border(page)
+        # self._verify_page_channel_and_border(page)
         self.page = page
         self.page_boundaries = self.get_page_boundaries(page)
 

@@ -15,3 +15,8 @@ class Book:
 
     def set_pages(self, pages: list[Page]):
         self.pages = pages
+
+    def __bool__(self):
+        if self.metadata and self.pages and self.page_images:
+            return True
+        return False

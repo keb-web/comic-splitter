@@ -62,7 +62,7 @@ class TestPanelLabeler():
         x2, y2 = p2.centroid
         return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
-    def test_labeler_identifies_distance_between_panels(self):
+    def test_labeler_logs_distance_between_panels(self):
         left_panel = Panel(x=5, y=5, width=25, height=25)
         middle_panel = Panel(x=30, y=5, width=25, height=25)
         right_panel = Panel(x=60, y=5, width=25, height=25)
@@ -70,10 +70,10 @@ class TestPanelLabeler():
         labeler = PanelLabeler()
         starting_panel = right_panel
 
-        dist = labeler._get_relative_distances(panels=panels,
-                                               starting_panel=starting_panel)
+        dist_log = labeler._get_relative_distances(
+            panels=panels, starting_panel=starting_panel)
 
-        assert dist == {
+        assert dist_log == {
             self.distance(left_panel, starting_panel): left_panel,
             self.distance(middle_panel, starting_panel): middle_panel,
             self.distance(right_panel, starting_panel): right_panel

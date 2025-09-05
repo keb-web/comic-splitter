@@ -1,7 +1,6 @@
 import base64
 from io import BytesIO
 
-import pytest
 from fastapi.testclient import TestClient
 
 from comic_splitter.server import app

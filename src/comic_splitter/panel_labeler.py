@@ -38,11 +38,11 @@ class PanelLabeler():
 
     def _get_relative_distances(self, panels: list[Panel],
                                 starting_panel: Panel) -> dict[float, Panel]:
-        distance = {}
+        distance_log = {}
         for panel in panels:
             rel_dist = self._distance(panel.centroid, starting_panel.centroid)
-            distance[rel_dist] = panel
-        return distance
+            distance_log[rel_dist] = panel
+        return distance_log
 
     def _distance(self, p1, p2):
         x1, y1 = p1
