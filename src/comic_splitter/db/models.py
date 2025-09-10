@@ -1,5 +1,11 @@
 from typing import Optional
+from pydantic import BaseModel
 from sqlmodel import Field, SQLModel
+
+
+class SplitFiles(BaseModel):
+    image_type: str
+    images: list[str]
 
 
 class AuthorBase(SQLModel):

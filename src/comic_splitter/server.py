@@ -14,7 +14,7 @@ from comic_splitter.config import VALID_FILE_TYPES
 from comic_splitter.file_adapter import FileAdapter
 import comic_splitter.db.database as db
 from comic_splitter.db.models import Author, AuthorCreate, AuthorPublic, \
-    Book, BookCreate, BookPublic, Page, Panel
+    Book, BookCreate, BookPublic, Page, Panel, SplitFiles
 
 
 SessionDep = Annotated[Session, Depends(db.get_session)]
@@ -43,13 +43,13 @@ app.add_middleware(
 )
 
 
-@app.post("/split")
+@app.post("/split", response_model=SplitFiles)
 async def split(mode: Literal['crop', 'etch'] = Form('crop'),
                 blank: bool = Form(False),
                 label: bool = Form(False),
                 margins: int = Form(0),
                 files: List[UploadFile] = File(...)):
-    _check_valid_file_extension(files)
+    check_valid_file_extension(files)
     options = {'blank': blank, 'label': label,
                'margins': margins, 'mode': mode}
     file_type = files[0].content_type
@@ -64,7 +64,7 @@ async def split(mode: Literal['crop', 'etch'] = Form('crop'),
     return {'image_type': file_type, 'images': encoded_files}
 
 
-def _check_valid_file_extension(files: List[UploadFile]):
+def check_valid_file_extension(files: List[UploadFile]):
     for file in files:
         name = file.filename
         if name and name.rsplit('.', -1)[-1].lower() not in VALID_FILE_TYPES:
