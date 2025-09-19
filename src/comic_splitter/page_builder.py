@@ -18,7 +18,6 @@ class PageBuilder:
         for page_number, file in enumerate(self.files):
             file_content = await self._decode_bytes_to_matlike_image(file)
 
-            # we are preprocessing the image
             if len(file_content) == 3:
                 file_content = cv2.cvtColor(
                     file_content, cv2.COLOR_BGR2GRAY)
@@ -30,7 +29,6 @@ class PageBuilder:
                                               value=white)
             processed_file_content = self._preprocess_image(file_content)
 
-            # NOTE: REFACTOR: maintain SRI by detecting only in cs class?
             sd = SectionDetector(processed_file_content)
             sections = sd.detect_page_sections()
             page = Page(content=file_content,

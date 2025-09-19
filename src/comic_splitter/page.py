@@ -10,8 +10,9 @@ class Page:
         self.content = content
         self.processed_content = processed_content
         self.sections = sections
-        self.page_number = page_number
-        self.panels = []
+
+        self.page_number: int = page_number
+        self.panels: list[Panel] = []
 
     def get_content(self) -> MatLike:
         return self.content

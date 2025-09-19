@@ -21,8 +21,13 @@ class ComicSplitter:
         self.panel_detector = panel_detector or PanelDetector()
         self.page_builder = page_builder or PageBuilder(files)
 
+    def get_book(self):
+        return self.book
+
     async def split(self) -> list[MatLike]:
+        self.book.metadata['filetype'] = self.options['filetype']
         await self._get_book_data_from_bytes()
+        self.set_panel_images(self.options['mode'], self.book.get_pages())
         panel_imgs = self.generate_panel_images(
             self.options['mode'], self.book.get_pages())
         return panel_imgs
@@ -49,6 +54,9 @@ class ComicSplitter:
     def generate_panel_images(self, mode, pages: list[Page]) -> list[MatLike]:
         panel_imgs = []
         if mode == 'crop':
+            # NOTE: if we are setting panel_imgs as a sideaffect to
+            #  crop_panel, we cal just call that before this function.
+            #  so that all this function does is collect the needed attributes
             for page in pages:
                 # NOTE: Default contour-based implementation
                 panel_imgs.extend(
@@ -78,3 +86,11 @@ class ComicSplitter:
                 #     blank=self.options['blank']
                 # ))
         return panel_imgs
+
+    def set_panel_images(self, mode, pages: list[Page]):
+        if mode == 'crop':
+            for page in pages:
+                for panel in page.get_panels():
+                    cropped_image = self.cropper.crop_panel(
+                        page.get_content(), panel)
+                    panel.set_content(cropped_image)

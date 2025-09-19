@@ -55,9 +55,10 @@ async def split(mode: Literal['crop', 'etch'] = Form('crop'),
                 files: List[UploadFile] = File(...)):
 
     check_valid_file_extension(files)
+    filetype = files[0].content_type
     options = {'blank': blank, 'label': label,
-               'margins': margins, 'mode': mode}
-    file_type = files[0].content_type
+               'margins': margins, 'mode': mode,
+               'filetype': filetype}
 
     adapter = FileAdapter()
     files_as_bytesio = adapter.sources_to_binary_io(files)
@@ -66,7 +67,7 @@ async def split(mode: Literal['crop', 'etch'] = Form('crop'),
     panels = await splitter.split()
     panels_as_bytes = encode_panels_to_bytes(panels)
     encoded_files = [b64encode(p).decode('utf-8') for p in panels_as_bytes]
-    return {'image_type': file_type, 'images': encoded_files}
+    return {'image_type': filetype, 'images': encoded_files}
 
 
 def check_valid_file_extension(files: List[UploadFile]):

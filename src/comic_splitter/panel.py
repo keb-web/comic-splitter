@@ -1,5 +1,9 @@
+from base64 import b64encode
 from dataclasses import dataclass
 from typing import Literal
+
+import cv2
+from cv2.typing import MatLike
 
 
 @dataclass
@@ -13,6 +17,7 @@ class Panel:
 
     def __post_init__(self):
         self.centroid = self._centroid()
+        self.content = ''
 
     def get_idx(self, dir: Literal['RTL', 'LTR'] = 'RTL'):
         return self.rtl_idx if dir == 'RTL' else self.ltr_idx
@@ -22,6 +27,13 @@ class Panel:
             self.rtl_idx = idx
         else:
             self.ltr_idx = idx
+
+    def set_content(self, content: MatLike, format: str = '.jpg'):
+        success, buf = cv2.imencode(format, content)
+        if not success:
+            raise ValueError("Failed to encode panel image")
+        img_bytes = buf.tobytes()
+        self.content = b64encode(img_bytes).decode('utf-8')
 
     def get_rect(self) -> tuple:
         return (self.x, self.y, self.width, self.height)

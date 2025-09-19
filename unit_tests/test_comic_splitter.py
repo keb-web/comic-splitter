@@ -11,7 +11,8 @@ utils = PageUtils()
 class TestComicSplitter:
     @pytest.mark.asyncio
     async def test_splitter_extracts_nothing_from_empty_files(self):
-        dummy_options = {'margins': 0, 'mode': 'crop'}
+        dummy_options = {'margins': 0, 'mode': 'crop',
+                         'filetype': 'dummy-type'}
         cs = ComicSplitter(files=[], options=dummy_options)
         assert await cs.split() == []
         assert cs.book.get_pages() == []
@@ -28,7 +29,9 @@ class TestComicSplitter:
 
         mock_splitter = ComicSplitter(
             files=[BytesIO(b"dummy")],
-            options={"mode": f"{mode}", 'label': None, 'blank': None},
+            options={
+                "mode": f"{mode}", 'label': None,
+                'blank': None, 'filetype': 'dummy-type'},
             book=mock_book,
             cropper=mock_cropper,
             etcher=mock_etcher,

@@ -50,3 +50,37 @@ class TestServer:
 
         payload = etch_response.json()
         assert len(payload['images']) == 1
+
+
+class TestServerDatabaseEndpoints:
+    def test_create_book_with_pages(self):
+        payload = {
+                'author': 'dummy-author',
+                'title': 'dummy-comic',
+                'chapter': '1',
+                'pages': [
+                    {
+                        'page_number': 1,
+                        'panels': [
+                            {
+                                'x': 5,
+                                'y': 5,
+                                'width': 20,
+                                'height': 30,
+                                'rtl_idx': 2,
+                                'ltr_idx': 1,
+                                'centroid': (15.0, 20.0)
+                            },
+                            {
+                                'x': 25,
+                                'y': 5,
+                                'width': 20,
+                                'height': 30,
+                                'rtl_idx': 1,
+                                'ltr_idx': 2,
+                                'centroid': (35.0, 20.0)
+                            }
+                        ],
+                    },
+                ],
+            }
