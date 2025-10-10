@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 
-from comic_splitter.db.models import BookPublic, BookCreate, Book, Author, Series
+from comic_splitter.db.models import BookPublic, BookCreate, Book, Author, Page, Panel, Series
 from comic_splitter.server import SessionDep
 
 router = APIRouter(prefix='/books', tags=['Books'])
@@ -35,11 +35,30 @@ def create_book(book: BookCreate, session: SessionDep):
                 )
         book_series_id = series.id
 
-    db_book = Book.model_validate(book, update={
-        "author_id": author.id, "series_id": book_series_id
-    })
-
+    db_book = Book(
+        title=book.title,
+        entry_number=int(book.entry_number) if book.entry_number else None,
+        author_id=author.id,
+        series_id=book_series_id,
+    )
     session.add(db_book)
+    session.flush()
+
+    if book.pages:
+        for page_data in book.pages:
+            db_page = Page(book_id=db_book.id,
+                           page_number=page_data.page_number)
+            session.add(db_page)
+            session.flush()
+            if page_data.panels:
+                for panel in page_data.panels:
+
+                    db_panel = Panel(page_id=db_page.id, x=panel.x, y=panel.y,
+                                     width=panel.width, height=panel.height,
+                                     ltr_idx=panel.ltr_idx,
+                                     rtl_idx=panel.rtl_idx)
+                    session.add(db_panel)
+
     session.commit()
     session.refresh(db_book)
 

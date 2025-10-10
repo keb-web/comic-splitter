@@ -1,8 +1,9 @@
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine, select
+from sqlmodel.pool import StaticPool
 
 from comic_splitter.db.database import get_session
-from comic_splitter.db.models import Author, Series
+from comic_splitter.db.models import Author, Book, Page, Panel, Series
 from comic_splitter.server import app
 
 
@@ -10,7 +11,6 @@ class TestDatabaseEndpoints:
 
     # @pytest.mark.paramaterize() #known author, and unknown author
     # def test_create_book
-
     def test_create_book_with_pages(self):
         '''
             for future me:
@@ -27,14 +27,16 @@ class TestDatabaseEndpoints:
              'height': 30,
              'rtl_idx': 2,
              'ltr_idx': 1,
-             'centroid': (15.0, 20.0)},
+             'id': 1
+             },
             {'x': 25,
              'y': 5,
              'width': 20,
              'height': 30,
              'rtl_idx': 1,
              'ltr_idx': 2,
-             'centroid': (35.0, 20.0)}]
+             'id': 2
+             }]
 
         payload = {
                 'title': 'dummy-comic',
@@ -48,20 +50,25 @@ class TestDatabaseEndpoints:
                     },
                 ],
             }
+
         engine = create_engine(
-            "sqlite:///testing.db",
-            connect_args={"check_same_thread": False})
+            "sqlite://",
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+        )
+
         SQLModel.metadata.create_all(engine)
         with Session(engine) as session:
             def get_session_override():
                 return session
             app.dependency_overrides[get_session] = get_session_override
+
             client = TestClient(app)
             response = client.post(
                 "/books/", json=payload)
             app.dependency_overrides.clear()
             data = response.json()
-            print(data)
+
             assert data["title"] == "dummy-comic"
             assert data["entry_number"] == 1
 
@@ -75,5 +82,6 @@ class TestDatabaseEndpoints:
             series_is_found = session.exec(find_series_query).first()
             assert series_is_found
 
-            # assert len(data["pages"]) == 1
-            # assert len(data["pages"]["panels"]) == dummy_panels
+            assert len(data["pages"]) == 1
+            page_1 = data['pages'][0]
+            assert page_1["panels"] == dummy_panels
