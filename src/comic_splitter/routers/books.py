@@ -2,22 +2,26 @@ from typing import List
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 
-from comic_splitter.db.models import BookPublic, BookCreate, Book, Author, Page, Panel, Series
+from comic_splitter.db.models import BookPublic, BookCreate, Book, Author, \
+    Page, Panel, Series
 from comic_splitter.server import SessionDep
 
 router = APIRouter(prefix='/books', tags=['Books'])
 
 
-@router.post('/', response_model=BookPublic)
-def create_book(book: BookCreate, session: SessionDep):
+def add_author(book: BookCreate, session: SessionDep) -> Author:
     author = session.exec(
         select(Author).where(Author.name == book.author_name)).first()
-
     if author is None:
         author = Author(name=book.author_name)
         session.add(author)
         session.flush()
+    return author
 
+
+def add_series(author, book: BookCreate, session: SessionDep) -> None | int:
+    # use existing series if series has the same author
+    # return nothing if no series provided
     book_series_id = None
     if book.series_title:
         series = session.exec(
@@ -34,6 +38,32 @@ def create_book(book: BookCreate, session: SessionDep):
                            "belongs to different author"
                 )
         book_series_id = series.id
+    return book_series_id
+
+
+def add_book_content(book: BookCreate, db_book: Book, session: SessionDep):
+    # override existing pages and panels
+    if book.pages:
+        for page_data in book.pages:
+            db_page = Page(book_id=db_book.id,
+                           page_number=page_data.page_number)
+            session.add(db_page)
+            session.flush()
+
+            if page_data.panels:
+                for panel in page_data.panels:
+                    db_panel = Panel(page_id=db_page.id, x=panel.x, y=panel.y,
+                                     width=panel.width, height=panel.height,
+                                     ltr_idx=panel.ltr_idx,
+                                     rtl_idx=panel.rtl_idx)
+                    session.add(db_panel)
+
+
+@router.post('/', response_model=BookPublic)
+def create_book(book: BookCreate, session: SessionDep):
+    # use existing author if found
+    author = add_author(book, session)
+    book_series_id = add_series(author, book, session)
 
     db_book = Book(
         title=book.title,
@@ -44,24 +74,10 @@ def create_book(book: BookCreate, session: SessionDep):
     session.add(db_book)
     session.flush()
 
-    if book.pages:
-        for page_data in book.pages:
-            db_page = Page(book_id=db_book.id,
-                           page_number=page_data.page_number)
-            session.add(db_page)
-            session.flush()
-            if page_data.panels:
-                for panel in page_data.panels:
-
-                    db_panel = Panel(page_id=db_page.id, x=panel.x, y=panel.y,
-                                     width=panel.width, height=panel.height,
-                                     ltr_idx=panel.ltr_idx,
-                                     rtl_idx=panel.rtl_idx)
-                    session.add(db_panel)
+    add_book_content(book, db_book, session)
 
     session.commit()
     session.refresh(db_book)
-
     return db_book
 
 
@@ -80,7 +96,6 @@ def get_books(book_id: int, session: SessionDep) -> Book:
 )
 def get_author_books(
         author_id: int, session: SessionDep):
-
     select_author_books_query = select(Book).where(Book.author_id == author_id)
     author_books = session.exec(select_author_books_query).all()
     if not author_books:
