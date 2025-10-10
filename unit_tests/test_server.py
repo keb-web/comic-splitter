@@ -7,6 +7,7 @@ from comic_splitter.server import app
 from .page_utils import PageUtils
 
 
+
 client = TestClient(app)
 utils = PageUtils()
 
@@ -57,7 +58,7 @@ class TestServerDatabaseEndpoints:
         payload = {
                 'author': 'dummy-author',
                 'title': 'dummy-comic',
-                'chapter': '1',
+                'entry_number': '1',
                 'pages': [
                     {
                         'page_number': 1,
@@ -84,3 +85,10 @@ class TestServerDatabaseEndpoints:
                     },
                 ],
             }
+        client = TestClient(app)
+        response = client.post(
+            "/books", json=payload
+        )
+        data = response.json()
+        assert response.status_code == 200
+        assert data["author"] == "dummy-author"

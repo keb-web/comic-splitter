@@ -1,5 +1,10 @@
 # Comic Splitter
 
+# First-Time Setup (to automate away later)
+add db/database.db in root
+this will be the dev database (sqlite)
+
+
 ## Server
 
 **fast api server**

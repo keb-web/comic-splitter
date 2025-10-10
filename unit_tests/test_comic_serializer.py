@@ -52,7 +52,7 @@ class TestComicSerializer(unittest.TestCase):
         dummy_metadata = {
             'author': 'dummy-author',
             'title': "dummy-comic",
-            'chapter': "1",
+            'entry_number': "1",
             'filetype': 'dummy-type'
         }
         book = Book(dummy_metadata)
@@ -65,7 +65,7 @@ class TestComicSerializer(unittest.TestCase):
         expected_dict = {
                 'author': 'dummy-author',
                 'title': 'dummy-comic',
-                'chapter': '1',
+                'entry_number': '1',
                 'filetype': image_type,
                 'pages': [
                     {

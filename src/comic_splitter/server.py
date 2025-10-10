@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from comic_splitter.comic_splitter import ComicSplitter
 from comic_splitter.config import VALID_FILE_TYPES
 import comic_splitter.db.database as db
-from comic_splitter.db.models import SplitFiles
+from comic_splitter.db.models import SplitFilesPublic
 from comic_splitter.dep import SessionDep
 from comic_splitter.file_adapter import FileAdapter
 from comic_splitter.routers import books, authors
@@ -47,7 +47,7 @@ async def root():
     return {"message": "Hello Bigger Applications!"}
 
 
-@app.post("/split", response_model=SplitFiles)
+@app.post("/split", response_model=SplitFilesPublic)
 async def split(mode: Literal['crop', 'etch'] = Form('crop'),
                 blank: bool = Form(False),
                 label: bool = Form(False),

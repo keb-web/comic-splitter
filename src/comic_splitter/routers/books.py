@@ -2,7 +2,7 @@ from typing import List
 from fastapi import APIRouter, HTTPException
 from sqlmodel import select
 
-from comic_splitter.db.models import BookPublic, BookCreate, Book
+from comic_splitter.db.models import BookPublic, BookCreate, Book, Author, Series
 from comic_splitter.server import SessionDep
 
 router = APIRouter(prefix='/books', tags=['Books'])
@@ -10,10 +10,39 @@ router = APIRouter(prefix='/books', tags=['Books'])
 
 @router.post('/', response_model=BookPublic)
 def create_book(book: BookCreate, session: SessionDep):
-    db_book = Book.model_validate(book)
+    author = session.exec(
+        select(Author).where(Author.name == book.author_name)).first()
+
+    if author is None:
+        author = Author(name=book.author_name)
+        session.add(author)
+        session.flush()
+
+    book_series_id = None
+    if book.series_title:
+        series = session.exec(
+            select(Series).where(Series.title == book.series_title)).first()
+        if series is None:
+            series = Series(title=book.series_title, author_id=author.id)
+            session.add(series)
+            session.flush()
+        else:
+            if series.author_id != author.id:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Series '{book.series_title}'"
+                           "belongs to different author"
+                )
+        book_series_id = series.id
+
+    db_book = Book.model_validate(book, update={
+        "author_id": author.id, "series_id": book_series_id
+    })
+
     session.add(db_book)
     session.commit()
     session.refresh(db_book)
+
     return db_book
 
 

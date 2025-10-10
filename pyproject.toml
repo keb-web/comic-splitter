@@ -1,3 +1,13 @@
 [project]
 name = "comic_splitter"
 version = "0.1.0"
+dependencies = [
+    "fastapi>=0.117.1",
+    "httpx>=0.28.1",
+]
+requires-python = ">=3.12"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]

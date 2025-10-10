@@ -1,12 +1,12 @@
 from typing import List, Literal, Optional
 from fastapi import Form, UploadFile
 from pydantic import BaseModel
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 
 
-class SplitFiles(BaseModel):
+class SplitFilesPublic(BaseModel):
     image_type: str
-    images: list[str]
+    images: List[str]
 
 
 class AuthorBase(SQLModel):
@@ -15,10 +15,12 @@ class AuthorBase(SQLModel):
 
 class Author(AuthorBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    books: List["Book"] = Relationship(back_populates="author")
+    series: Optional[List["Series"]] = Relationship(back_populates="author")
 
 
 class AuthorCreate(AuthorBase):
-    pass
+    name: str
 
 
 class AuthorPublic(AuthorBase):
@@ -27,11 +29,13 @@ class AuthorPublic(AuthorBase):
 
 class SeriesBase(SQLModel):
     title: str | None = Field(index=True)
-    author_id: int | None = Field(default=None, foreign_key='author.id')
 
 
 class Series(SeriesBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    books: List["Book"] = Relationship(back_populates="series")
+    author: Author = Relationship(back_populates="series")
+    author_id: int | None = Field(default=None, foreign_key='author.id')
 
 
 class SeriesCreate(SeriesBase):
@@ -44,18 +48,21 @@ class SeriesPublic(SeriesBase):
 
 class BookBase(SQLModel):
     title: str = Field(index=True)
-    chapter_number: Optional[int] = None
-    chapter_name: Optional[str] = None
+    entry_number: Optional[int] = None
+    # pages: Optional[Pages] = Relationship(back_populates='books')
 
 
 class Book(BookBase, table=True):
     id: int | None = Field(default=None, primary_key=True)
+    author: Optional[Author] = Relationship(back_populates="books")
+    series: Optional[Series] = Relationship(back_populates="books")
     author_id: int | None = Field(default=None, foreign_key='author.id')
     series_id: int | None = Field(default=None, foreign_key='series.id')
 
 
 class BookCreate(BookBase):
-    pass
+    author_name: str
+    series_title: Optional[str]
 
 
 class BookPublic(BookBase):

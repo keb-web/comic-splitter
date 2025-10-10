@@ -24,12 +24,12 @@ class Book:
     def to_json(self):
         author = self.metadata['author'].lower().strip()
         title = self.metadata['title'].lower().strip()
-        chapter = self.metadata['chapter'].lower().strip()
+        entry_number = self.metadata['entry_number'].lower().strip()
         filetype = self.metadata['filetype'].lower().strip()
         return {
             'author': author,
             'title': title,
-            'chapter': chapter,
+            'entry_number': entry_number,
             'filetype': filetype,
             'pages': [page.to_json() for page in self.pages],
         }
