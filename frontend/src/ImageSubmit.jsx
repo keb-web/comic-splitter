@@ -1,10 +1,13 @@
 import { useState } from 'react'
 
-function ImageSubmit({ setSplitImages }) {
+function ImageSubmit({ setSplitImages, setSplitTemplate, setSplitData }) {
 	const [label, setLabel] = useState(false)
 	const [blank, setBlank] = useState(false)
 	const [margins, setMargins] = useState(0)
 	const [mode, setMode] = useState('crop')
+	const [author, setAuthor] = useState('author')
+	const [title, setTitle] = useState('title')
+	const [entryNumber, setEntryNumber] = useState(0)
 	const valid_filetypes = ['image/jpeg', 'image/png', 'image/jpg']
 
 	function handleSubmit(e) {
@@ -19,6 +22,10 @@ function ImageSubmit({ setSplitImages }) {
 		formData.append("blank", blank);
 		formData.append("margins", margins);
 		formData.append("mode", mode);
+
+		formData.append("author", author);
+		formData.append("title", title);
+		formData.append("entryNumber", entryNumber);
 
 		retrieveSplitImages(formData, form)
 	}
@@ -42,19 +49,27 @@ function ImageSubmit({ setSplitImages }) {
 			if (!response.ok) {
 				throw new Error('Response status: ${response.status}');
 			}
-			const imageData = await response.json()
-			setSplitImages(imageData)
+			const splitData = await response.json()
+			const template = splitData.template
+			const images = splitData.images
+			setSplitData(splitData)
+			setSplitTemplate(template)
+			setSplitImages(images)
+
 		} catch (error) {
 			console.error(error)
 		}
 	}
 
 	return (
-		<form method='post' onSubmit={handleSubmit}>
+		<form class='inputForm' method='post' onSubmit={handleSubmit}>
+			<p>Upload (png & jpeg)</p>
 			<input name='files' type='file' accept='image/png, image/jpeg, image/jpg' multiple />
 			<button type="reset" onClick={() => { setSplitImages([]) }}>Reset form</button>
 			<button type="submit">Submit form</button>
-			<div class='formSettings'>
+			<hr/>
+			<div class='optionsFormContainer'>
+				<p>Options</p>
 				<label>
 					<input type="radio" name="mode" value="crop" checked={mode == 'crop'} onChange={() => setMode('crop')}/>
 					Crop
@@ -73,8 +88,25 @@ function ImageSubmit({ setSplitImages }) {
 				</label>
 				<label>
 					Margins
-					<input type="number" id="margins" name="margins" min='0' max='25' value={margins} onChange={(e) => setMargins(e.target.value)}/> </label>
+					<input type="number" id="margins" name="margins" min='0' max='25' value={margins} onChange={(e) => setMargins(e.target.value)}/>
+				</label>
 			</div>
+			<hr />
+				<div class='metadataFormContainer'>
+					<p>Metadata</p>
+					<label>
+						Author
+						<input type='text' id='author' name='author' value={author} onChange={(e) => setAuthor(e.target.value)}/>
+					</label>
+					<label>
+						Title
+						<input type='text' id='title' name='title' value={title} onChange={(e) => setTitle(e.target.value)}/>
+					</label>
+					<label>
+						entry number (optional)
+						<input type='entry_number' id='entry_number' name='entry_number' value={entryNumber} onChange={(e) => setEntryNumber(e.target.value)}/>
+					</label>
+				</div>
 			<hr />
 		</form>
 	);

@@ -2,22 +2,24 @@
 // import ImageGallery from "react-image-gallery";
 
 
-function ImagePreview({ splitImages }) {
-	if (!splitImages || !splitImages.images) {
-		return <div>No images to preview</div>;
+function ImagePreview({ splitData }) {
+	if (!splitData || !splitData.images) {
+		return <div></div>;
 	}
 
-	const imageType = splitImages.image_type.split('/')[1];
-	const previewImages = splitImages.images.map((base64) =>
+	const imageType = splitData.image_type.split('/')[1];
+	const previewImages = splitData.images.map((base64) =>
 		`data:image/${imageType};base64,${base64}`
 	);
 
 	return (
-		<div>
-			{previewImages.map((src, index) => (
-				<img key={index} src={src} alt={`img-${index}`} />
-			))}
-		</div>
+		<>
+			<div>
+				{previewImages.map((src, index) => (
+					<img key={index} src={src} alt={`img-${index}`} />
+				))}
+			</div>
+		</>
 	);
 }
 
