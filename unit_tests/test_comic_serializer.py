@@ -53,20 +53,18 @@ class TestComicSerializer(unittest.TestCase):
             'author': 'dummy-author',
             'title': "dummy-comic",
             'entry_number': "1",
-            'filetype': 'dummy-type'
         }
         book = Book(dummy_metadata)
+        book.filetype = 'dummy-type'
         book.add_page(page_1)
         book.page_images = [MagicMock()]
         book_dict = book.to_json()
-
-        image_type = 'dummy-type'
 
         expected_dict = {
                 'author': 'dummy-author',
                 'title': 'dummy-comic',
                 'entry_number': '1',
-                'filetype': image_type,
+                'filetype': 'dummy-type',
                 'pages': [
                     {
                         'page_number': 1,

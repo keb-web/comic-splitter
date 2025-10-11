@@ -12,7 +12,7 @@ class TestComicSplitter:
     @pytest.mark.asyncio
     async def test_splitter_extracts_nothing_from_empty_files(self):
         dummy_options = {'margins': 0, 'mode': 'crop',
-                         'filetype': 'dummy-type'}
+                         'filetype': 'dummy-type', 'metadata': {}}
         cs = ComicSplitter(files=[], options=dummy_options)
         assert await cs.split() == []
         assert cs.book.get_pages() == []
@@ -29,9 +29,9 @@ class TestComicSplitter:
 
         mock_splitter = ComicSplitter(
             files=[BytesIO(b"dummy")],
-            options={
-                "mode": f"{mode}", 'label': None,
-                'blank': None, 'filetype': 'dummy-type'},
+            options={"mode": f"{mode}", 'label': None,
+                     'blank': None, 'filetype': 'dummy-type',
+                     'metadata': {}},
             book=mock_book,
             cropper=mock_cropper,
             etcher=mock_etcher,

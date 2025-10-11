@@ -25,7 +25,8 @@ class ComicSplitter:
         return self.book
 
     async def split(self) -> list[MatLike]:
-        self.book.metadata['filetype'] = self.options['filetype']
+        self.book.set_filetype(self.options['filetype'])
+        self.book.set_metadata(self.options['metadata'])
         await self._get_book_data_from_bytes()
         self.set_panel_images(self.options['mode'], self.book.get_pages())
         panel_imgs = self.generate_panel_images(

@@ -7,6 +7,7 @@ from cv2.typing import MatLike
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
+from comic_splitter import comic_splitter
 from comic_splitter.comic_splitter import ComicSplitter
 from comic_splitter.config import VALID_FILE_TYPES
 import comic_splitter.db.database as db
@@ -52,13 +53,21 @@ async def split(mode: Literal['crop', 'etch'] = Form('crop'),
                 blank: bool = Form(False),
                 label: bool = Form(False),
                 margins: int = Form(0),
+                author: str = Form('author'),
+                title: str = Form('title'),
+                entryNumber: int = Form(0),
                 files: List[UploadFile] = File(...)):
 
     check_valid_file_extension(files)
     filetype = files[0].content_type
+    book_metadata = {
+        'author': author,
+        'title': title,
+        'entry_number': entryNumber
+    }
     options = {'blank': blank, 'label': label,
                'margins': margins, 'mode': mode,
-               'filetype': filetype}
+               'filetype': filetype, 'metadata': book_metadata}
 
     adapter = FileAdapter()
     files_as_bytesio = adapter.sources_to_binary_io(files)
@@ -67,7 +76,11 @@ async def split(mode: Literal['crop', 'etch'] = Form('crop'),
     panels = await splitter.split()
     panels_as_bytes = encode_panels_to_bytes(panels)
     encoded_files = [b64encode(p).decode('utf-8') for p in panels_as_bytes]
-    return {'image_type': filetype, 'images': encoded_files}
+
+    book = splitter.get_book()
+    return {'image_type': filetype,
+            'images': encoded_files,
+            'template': book.to_json()}
 
 
 def check_valid_file_extension(files: List[UploadFile]):

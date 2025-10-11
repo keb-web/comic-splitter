@@ -6,6 +6,7 @@ from sqlmodel import Field, SQLModel, Relationship
 class SplitFilesPublic(BaseModel):
     image_type: str
     images: List[str]
+    template: dict
 
 
 class AuthorBase(SQLModel):
