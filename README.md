@@ -1,9 +1,18 @@
 # Comic Splitter
 
-# First-Time Setup (to automate away later)
-add db/database.db in root
-this will be the dev database (sqlite)
+Use makefile commands
+``` bash
+make setup
+make test
+make run
+make frontend
+make backend
+make clean
+```
 
+# Database Setup
+create db/database.db
+sqlite3 db/database.db
 
 ## Server
 
