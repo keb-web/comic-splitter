@@ -9,7 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    env:
+      USE_IN_MEMORY_DB: 'true'
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python 3.13
