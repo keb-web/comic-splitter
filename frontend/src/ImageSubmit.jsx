@@ -62,13 +62,13 @@ function ImageSubmit({ setSplitImages, setSplitTemplate, setSplitData }) {
 	}
 
 	return (
-		<form class='inputForm' method='post' onSubmit={handleSubmit}>
+		<form className='inputForm' method='post' onSubmit={handleSubmit}>
 			<p>Upload (png & jpeg)</p>
 			<input name='files' type='file' accept='image/png, image/jpeg, image/jpg' multiple />
 			<button type="reset" onClick={() => { setSplitImages([]) }}>Reset form</button>
 			<button type="submit">Submit form</button>
 			<hr/>
-			<div class='optionsFormContainer'>
+			<div className='optionsFormContainer'>
 				<p>Options</p>
 				<label>
 					<input type="radio" name="mode" value="crop" checked={mode == 'crop'} onChange={() => setMode('crop')}/>
@@ -92,7 +92,7 @@ function ImageSubmit({ setSplitImages, setSplitTemplate, setSplitData }) {
 				</label>
 			</div>
 			<hr />
-				<div class='metadataFormContainer'>
+				<div className='metadataFormContainer'>
 					<p>Metadata</p>
 					<label>
 						Author

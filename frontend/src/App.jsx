@@ -11,20 +11,21 @@ function App() {
 	const [splitData, setSplitData] = useState([])
 
 	return (
-		<div class='app'>
-			<div class='header'>
+		<div className='app'>
+			<div className='header'>
 				<h1>comic splitter</h1>
 			</div>
 
-			<div class='options'>
+			<div className='options'>
 				<ImageSubmit setSplitImages={setSplitImages} setSplitTemplate={setSplitTemplate} setSplitData={setSplitData}/>
-				<button class='zip'>download as .zip</button>
+				<button className='zip'>download as .zip</button>
 			</div>
 
-			<div class='imageGallery'>
-				<CanvasPreview splitTemplate={splitTemplate} splitImages={splitImages}/>
+			<div className='imageGallery'>
+				<CanvasPreview className='canvasPreview' splitTemplate={splitTemplate} splitImages={splitImages}/>
 				<ImagePreview splitData={splitData} />
 			</div>
+			
 		</div>
 	)
 }
