@@ -9,6 +9,7 @@
 // 	 affix div size and do not let updates values change it
 
 // add rectangles based on tempaltes
+// drawn rectangles need to be cleared if form is reset or next page button is pressed
 
 import { useEffect, useMemo, useState} from 'react';
 import { Stage, Layer, Rect, Image} from 'react-konva';
@@ -18,16 +19,19 @@ import useImage from 'use-image'
 // This Canvas Preview should only work with etched
 // on crop, it should just be a simple carosel
 function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, galleryWidth}){
+	const [imgWidth, setImgWidth] = useState(0)
+	const [imgHeight, setImgHeight] = useState(0)
+	const [offsetX, setOffsetX] = useState(0)
+	const [offsetY, setOffsetY] = useState(0)
+	const [scale, setScale] = useState(0)
 
-	let x = 0, width = 0, height = 0, y = 0
+	let panelX = 0, panelWidth = 0, panelHeight = 0, panelY = 0
 	if (splitTemplate.pages){
-		console.log(splitTemplate)
 		const testTemplate = splitTemplate.pages[0].panels[0]
-		x = testTemplate.x
-		width = testTemplate.width
-		height = testTemplate.height
-		y = testTemplate.y
-		console.log(testTemplate)
+		panelX = testTemplate.x
+		panelWidth = testTemplate.width
+		panelHeight = testTemplate.height
+		panelY = testTemplate.y
 	}
 
 	const filetype = splitTemplate.filetype
@@ -39,7 +43,6 @@ function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, ga
 		const blob = new Blob([bytes], { type: filetype });
 		return URL.createObjectURL(blob);
 	};
-
 	const splitImageURLS = useMemo(() => {
 		if (!splitImages) return [];
 		return splitImages.map(bytes => base64ToImageUrl(bytes));
@@ -53,11 +56,6 @@ function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, ga
 
 	const URLImage = ({src, galleryWidth, galleryHeight, ...rest}) => {
 		let [image] = useImage(src, 'anonymous')
-  		const [scale, setScale] = useState(1);
-		const [imgWidth, setImgWidth] = useState(0)
-		const [imgHeight, setImgHeight] = useState(0)
-		const [offsetX, setOffsetX] = useState(0)
-		const [offsetY, setOffsetY] = useState(0)
 
         useEffect(() => {
           if (image) {
@@ -70,9 +68,9 @@ function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, ga
 			const offsetX = (galleryWidth - width * newScale) / 2;
 			const offsetY = (galleryHeight - height * newScale) / 2;
 
-			setScale(newScale);
-			setImgHeight(height);
-			setImgWidth(width);
+			setScale(newScale)
+			setImgHeight(height * newScale);
+			setImgWidth(width * newScale);
 			setOffsetX(offsetX);
 			setOffsetY(offsetY);
 
@@ -81,12 +79,14 @@ function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, ga
 
 		return <Image 
 					image={image}
-					x={offsetX} y={offsetY}
-		  			width={imgWidth * scale} 
-				    height={imgHeight * scale}
+					x={offsetX}
+				    y={offsetY}
+		  			width={imgWidth}
+					height={imgHeight}
 					{...rest}
 				/>
 	}
+
 	
 	return (
 		<div className={className}>
@@ -97,8 +97,9 @@ function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, ga
 				</Layer>
 
 				<Layer className='canvasLayer'>
-					<Rect x={x} width={width} y={y} height={height} stroke='green'></Rect>
+					<Rect x={panelX * scale + offsetX} width={panelWidth*scale} y={panelY * scale + offsetY} height={panelHeight * scale} stroke='yellow'></Rect>
 				</Layer>
+
 			</Stage>
 		</div>
 	)

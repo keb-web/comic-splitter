@@ -48,7 +48,6 @@ input {
 
 
 .canvasPreview {
-  border: 1px solid blue;
   display: inline-block;
   text-align: center;
 }
