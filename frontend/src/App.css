@@ -35,13 +35,22 @@ input {
   grid-row: 2 / 3;
   box-shadow: 15px 15px 500px #1a1a1a inset;
   border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 50px
+  padding: 4px;
+  margin-bottom: 50px;
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+  overflow: scroll;
+  display: flex;
+  flex-direction: row;
 }
 
+
 .canvasPreview {
-  border: 5px solid blue;
+  border: 1px solid blue;
   display: inline-block;
+  text-align: center;
 }
 
 /* Options Form Styling */

@@ -3,23 +3,31 @@
 // update template when it is resized
 
 // this is done already with react-konva just implement it!
+// fix sizing image issues
+// 	 full pages are being rendered based on panel sizes
+// 	 if etched we just need to display the image without specifying
+// 	 affix div size and do not let updates values change it
 
-import { useEffect, useMemo } from 'react';
+// add rectangles based on tempaltes
+
+import { useEffect, useMemo, useState} from 'react';
 import { Stage, Layer, Rect, Image} from 'react-konva';
 import useImage from 'use-image'
 
 
-function CanvasPreview({splitTemplate, splitImages, className}){
-	let x = 0
-	let width = 0
-	let height = 0
-	let y = 0
+// This Canvas Preview should only work with etched
+// on crop, it should just be a simple carosel
+function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, galleryWidth}){
+
+	let x = 0, width = 0, height = 0, y = 0
 	if (splitTemplate.pages){
+		console.log(splitTemplate)
 		const testTemplate = splitTemplate.pages[0].panels[0]
 		x = testTemplate.x
 		width = testTemplate.width
 		height = testTemplate.height
 		y = testTemplate.y
+		console.log(testTemplate)
 	}
 
 	const filetype = splitTemplate.filetype
@@ -43,19 +51,53 @@ function CanvasPreview({splitTemplate, splitImages, className}){
 
 	let testImg = splitImageURLS[0];
 
-	const URLImage = ({src, ...rest}) => {
+	const URLImage = ({src, galleryWidth, galleryHeight, ...rest}) => {
 		let [image] = useImage(src, 'anonymous')
-		return <Image image={image} {...rest}/>
+  		const [scale, setScale] = useState(1);
+		const [imgWidth, setImgWidth] = useState(0)
+		const [imgHeight, setImgHeight] = useState(0)
+		const [offsetX, setOffsetX] = useState(0)
+		const [offsetY, setOffsetY] = useState(0)
+
+        useEffect(() => {
+          if (image) {
+            const width = image.naturalWidth;
+            const height = image.naturalHeight;
+
+			const scaleX = galleryWidth / width;
+			const scaleY = galleryHeight / height;
+			const newScale = Math.min(scaleX, scaleY);
+			const offsetX = (galleryWidth - width * newScale) / 2;
+			const offsetY = (galleryHeight - height * newScale) / 2;
+
+			setScale(newScale);
+			setImgHeight(height);
+			setImgWidth(width);
+			setOffsetX(offsetX);
+			setOffsetY(offsetY);
+
+          }
+        }, [image, galleryWidth, galleryHeight]);
+
+		return <Image 
+					image={image}
+					x={offsetX} y={offsetY}
+		  			width={imgWidth * scale} 
+				    height={imgHeight * scale}
+					{...rest}
+				/>
 	}
 	
-	return(
+	return (
 		<div className={className}>
-			<Stage width={x+width} height={y+height}>
-				<Layer>
-					<Rect x={x} width={width} y={y} height={height} stroke='green'></Rect>
+			<Stage width={galleryWidth} height={galleryHeight}>
+
+				<Layer className='bgLayer'>
+					<URLImage src={testImg} galleryWidth={galleryWidth} galleryHeight={galleryHeight}/>
 				</Layer>
-				<Layer>
-					<URLImage src={testImg} x={x} y={y} width={width} height={height}/>
+
+				<Layer className='canvasLayer'>
+					<Rect x={x} width={width} y={y} height={height} stroke='green'></Rect>
 				</Layer>
 			</Stage>
 		</div>
