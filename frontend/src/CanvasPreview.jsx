@@ -8,7 +8,7 @@
 // 	 if etched we just need to display the image without specifying
 // 	 affix div size and do not let updates values change it
 
-// add rectangles based on tempaltes
+// add rectangles based on templates
 // drawn rectangles need to be cleared if form is reset or next page button is pressed
 
 import { useEffect, useMemo, useState} from 'react';
@@ -19,40 +19,35 @@ import useImage from 'use-image'
 // This Canvas Preview should only work with etched
 // on crop, it should just be a simple carosel
 function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, galleryWidth}){
+	const [pageIndex, setPageIndex] = useState(0)
 	const [imgWidth, setImgWidth] = useState(0)
 	const [imgHeight, setImgHeight] = useState(0)
 	const [offsetX, setOffsetX] = useState(0)
 	const [offsetY, setOffsetY] = useState(0)
 	const [scale, setScale] = useState(0)
 
-	let panelX = 0, panelWidth = 0, panelHeight = 0, panelY = 0
+	let pageTemplate = {}
 	if (splitTemplate.pages){
-		const testTemplate = splitTemplate.pages[0].panels[0]
-		panelX = testTemplate.x
-		panelWidth = testTemplate.width
-		panelHeight = testTemplate.height
-		panelY = testTemplate.y
+		pageTemplate = splitTemplate.pages[pageIndex].panels
 	}
 
 	const filetype = splitTemplate.filetype
-	function base64ToImageUrl(base64) {
-		const binary = atob(base64);
-		const len = binary.length;
-		const bytes = new Uint8Array(len);
-		for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
-		const blob = new Blob([bytes], { type: filetype });
-		return URL.createObjectURL(blob);
-	};
 	const splitImageURLS = useMemo(() => {
 		if (!splitImages) return [];
+		function base64ToImageUrl(base64) {
+			const binary = atob(base64);
+			const len = binary.length;
+			const bytes = new Uint8Array(len);
+			for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+			const blob = new Blob([bytes], { type: filetype });
+			return URL.createObjectURL(blob);
+		};
 		return splitImages.map(bytes => base64ToImageUrl(bytes));
 	}, [splitImages, filetype]);
 
 	useEffect(() => {
 	  return () => splitImageURLS.forEach((url) => URL.revokeObjectURL(url));
 	}, [splitImageURLS]);
-
-	let testImg = splitImageURLS[0];
 
 	const URLImage = ({src, galleryWidth, galleryHeight, ...rest}) => {
 		let [image] = useImage(src, 'anonymous')
@@ -87,19 +82,40 @@ function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, ga
 				/>
 	}
 
+	function PanelRectList({pageTemplate}) {
+
+	  console.log('template', pageTemplate)
+	  if (!pageTemplate) { return <></> }
+	  return (
+		<Layer className='canvasLayer' >
+		  {pageTemplate.map((panelTemplate, index) => {
+			const panelX = panelTemplate.x * scale + offsetX;
+			const panelY = panelTemplate.y * scale + offsetY;
+			const panelWidth = panelTemplate.width * scale;
+			const panelHeight = panelTemplate.height * scale;
+
+			return (
+			  <Rect
+				key={index}
+				x={panelX}
+				y={panelY}
+				width={panelWidth}
+				height={panelHeight}
+			  />
+			);
+		  })}
+		</Layer>
+	  );
+	}
 	
 	return (
 		<div className={className}>
 			<Stage width={galleryWidth} height={galleryHeight}>
 
 				<Layer className='bgLayer'>
-					<URLImage src={testImg} galleryWidth={galleryWidth} galleryHeight={galleryHeight}/>
+					<URLImage src={splitImageURLS[pageIndex]} galleryWidth={galleryWidth} galleryHeight={galleryHeight}/>
 				</Layer>
-
-				<Layer className='canvasLayer'>
-					<Rect x={panelX * scale + offsetX} width={panelWidth*scale} y={panelY * scale + offsetY} height={panelHeight * scale} stroke='yellow'></Rect>
-				</Layer>
-
+				<PanelRectList pageTemplate={pageTemplate}/>
 			</Stage>
 		</div>
 	)
