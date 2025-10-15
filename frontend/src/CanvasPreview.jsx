@@ -1,32 +1,21 @@
-// we need to get imagees and draw depending info from template
-// need to see if dran things on canvas can be resized and how to dynamically
-// update template when it is resized
-
-// this is done already with react-konva just implement it!
-// fix sizing image issues
-// 	 full pages are being rendered based on panel sizes
-// 	 if etched we just need to display the image without specifying
-// 	 affix div size and do not let updates values change it
-
-// add rectangles based on templates
-// drawn rectangles need to be cleared if form is reset or next page button is pressed
-
 import { useEffect, useMemo, useState} from 'react';
 import { Stage, Layer, Rect, Image} from 'react-konva';
 import useImage from 'use-image'
 
+// todo
+// we need to make the boxes movable and also update templates
+// then we need a verify button to make a api call to existing endpoint post/book?
 
 // This Canvas Preview should only work with etched
 // on crop, it should just be a simple carosel
-function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, galleryWidth}){
-	const [pageIndex, setPageIndex] = useState(0)
+function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, galleryWidth, pageIndex}){
 	const [imgWidth, setImgWidth] = useState(0)
 	const [imgHeight, setImgHeight] = useState(0)
 	const [offsetX, setOffsetX] = useState(0)
 	const [offsetY, setOffsetY] = useState(0)
 	const [scale, setScale] = useState(0)
 
-	let pageTemplate = {}
+	let pageTemplate = undefined
 	if (splitTemplate.pages){
 		pageTemplate = splitTemplate.pages[pageIndex].panels
 	}
@@ -83,8 +72,6 @@ function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, ga
 	}
 
 	function PanelRectList({pageTemplate}) {
-
-	  console.log('template', pageTemplate)
 	  if (!pageTemplate) { return <></> }
 	  return (
 		<Layer className='canvasLayer' >
@@ -109,15 +96,17 @@ function CanvasPreview({splitTemplate, splitImages, className, galleryHeight, ga
 	}
 	
 	return (
-		<div className={className}>
-			<Stage width={galleryWidth} height={galleryHeight}>
+		<>
+			<div className={className}>
+				<Stage width={galleryWidth} height={galleryHeight}>
 
-				<Layer className='bgLayer'>
-					<URLImage src={splitImageURLS[pageIndex]} galleryWidth={galleryWidth} galleryHeight={galleryHeight}/>
-				</Layer>
-				<PanelRectList pageTemplate={pageTemplate}/>
-			</Stage>
-		</div>
+					<Layer className='bgLayer'>
+						<URLImage src={splitImageURLS[pageIndex]} galleryWidth={galleryWidth} galleryHeight={galleryHeight}/>
+					</Layer>
+					<PanelRectList pageTemplate={pageTemplate}/>
+				</Stage>
+			</div>
+		</>
 	)
 }
 
