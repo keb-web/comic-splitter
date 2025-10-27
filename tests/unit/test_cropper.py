@@ -2,7 +2,8 @@ import numpy as np
 from comic_splitter.cropper import ImageCropper
 from comic_splitter.page import Panel
 from comic_splitter.page_section import PageSection
-from .page_utils import PageUtils
+from page_utils import PageUtils
+
 
 util = PageUtils()
 

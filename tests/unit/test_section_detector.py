@@ -8,7 +8,7 @@ from cv2.typing import MatLike
 
 from comic_splitter.page_section import PageSection
 from comic_splitter.section_detector import SectionDetector
-from .page_utils import PageUtils
+from page_utils import PageUtils
 
 utils = PageUtils()
 
@@ -261,7 +261,8 @@ class TestSectionDetector(unittest.TestCase):
 
     def test_gutter_detection_with_real_image(self):
         test_path = os.path.dirname(os.path.abspath(__file__))
-        img_path = os.path.join(test_path, "assets", 'real_gutter_test.jpg')
+        parent_path = os.path.dirname(test_path)
+        img_path = os.path.join(parent_path, "assets", 'real_gutter_test.jpg')
 
         test_img = cv2.imread(img_path)
         if test_img is None:

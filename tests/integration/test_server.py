@@ -4,7 +4,7 @@ from io import BytesIO
 from fastapi.testclient import TestClient
 
 from comic_splitter.server import app
-from .page_utils import PageUtils
+from page_utils import PageUtils
 
 
 client = TestClient(app)

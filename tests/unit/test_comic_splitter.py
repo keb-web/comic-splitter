@@ -3,13 +3,13 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock
 
 from comic_splitter.comic_splitter import ComicSplitter
-from unit_tests.page_utils import PageUtils
+from page_utils import PageUtils
 
 utils = PageUtils()
 
 
 class TestComicSplitter:
-    @pytest.mark.asyncio
+    @pytest.mark.asyncio()
     async def test_splitter_extracts_nothing_from_empty_files(self):
         dummy_options = {'margins': 0, 'mode': 'crop',
                          'filetype': 'dummy-type', 'metadata': {}}

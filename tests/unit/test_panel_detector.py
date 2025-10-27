@@ -3,7 +3,7 @@ import cv2
 import pytest
 
 from comic_splitter.panel_detector import PanelDetector
-from .page_utils import PageUtils, RectUtil
+from page_utils import PageUtils, RectUtil
 
 utils = PageUtils()
 
